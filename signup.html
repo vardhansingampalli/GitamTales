@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - GitamTales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-client.js"></script>
+</head>
+<body class="bg-gray-50">
+
+    <div class="flex flex-col items-center justify-center min-h-screen px-4">
+        <a href="index.html" class="text-3xl font-bold text-gray-900 mb-8">GitamTales</a>
+        <div class="w-full max-w-md bg-white rounded-xl shadow-lg border border-gray-200 p-8">
+            <h2 class="text-2xl font-bold text-center text-gray-800 mb-2">Create Your Account</h2>
+            <p class="text-center text-gray-500 mb-6">Join the GITAM community. It's free.</p>
+
+            <form id="signup-form" class="space-y-6">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">GITAM Email</label>
+                    <input type="email" id="email" name="email" required class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg focus:ring-[#007367] focus:border-[#007367] transition" placeholder="your.name@gitam.edu">
+                    <p id="email-error" class="text-red-500 text-xs mt-1 hidden">Please use a valid @gitam.edu or @gitam.in email.</p>
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <div class="relative mt-1">
+                        <input type="password" id="password" name="password" required minlength="8" class="block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg focus:ring-[#007367] focus:border-[#007367] transition pr-10" placeholder="8+ characters">
+                        <button type="button" id="toggle-password" class="absolute inset-y-0 right-0 px-3 flex items-center">
+                            <img src="assets/images/open.png" id="eye-icon" class="w-5 h-5" alt="Show password">
+                            <img src="assets/images/close.png" id="eye-slash-icon" class="w-5 h-5 hidden" alt="Hide password">
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+                    <div class="relative mt-1">
+                        <input type="password" id="confirm-password" name="confirm-password" required class="block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg focus:ring-[#007367] focus:border-[#007367] transition pr-10" placeholder="Re-enter your password">
+                        <button type="button" id="toggle-confirm-password" class="absolute inset-y-0 right-0 px-3 flex items-center">
+                            <img src="assets/images/open.png" id="confirm-eye-icon" class="w-5 h-5" alt="Show password">
+                            <img src="assets/images/close.png" id="confirm-eye-slash-icon" class="w-5 h-5 hidden" alt="Hide password">
+                        </button>
+                    </div>
+                    <p id="password-error" class="text-red-500 text-xs mt-1 hidden">Passwords do not match.</p>
+                </div>
+
+                <div>
+                    <button type="submit" class="w-full bg-[#007367] hover:bg-[#005f56] text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#007367] transition-all transform hover:scale-105">Create Account</button>
+                </div>
+            </form>
+
+            <p class="text-center text-sm text-gray-600 mt-8">
+                Already have an account?
+                <a href="login.html" class="font-medium text-[#007367] hover:underline">Log In</a>
+            </p>
+        </div>
+        <p class="text-center text-xs text-gray-500 mt-6">&copy; 2024 GitamTales. All rights reserved.</p>
+    </div>
+
+    <script src="js/signup.js"></script>
+</body>
+</html>
