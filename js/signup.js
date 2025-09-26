@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', function() {
     // Check if we are on a page with the signup form
     const signupForm = document.getElementById('signup-form');
@@ -111,3 +110,4 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
