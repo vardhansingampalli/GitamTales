@@ -5,42 +5,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // --- Dynamic Navigation based on Auth State ---
-    const navLinksContainer = document.querySelector('.hidden.md\\:flex.items-center.space-x-6');
-    const mobileMenuNav = document.getElementById('mobile-menu');
-
+    // --- SESSION CHECK & REDIRECT ---
+    // This is the key part for handling Google login redirects.
     const { data: { session } } = await supabaseClient.auth.getSession();
-
     if (session) {
-        // User is LOGGED IN, update navigation
-        const navContent = `
-            <a href="#features" class="text-gray-600 hover:text-[#007367] transition-colors dark:text-gray-400 dark:hover:text-[#00c2aa]">How It Works</a>
-            <a href="#discover" class="text-gray-600 hover:text-[#007367] transition-colors dark:text-gray-400 dark:hover:text-[#00c2aa]">Discover</a>
-            <a href="dashboard.html" class="bg-[#007367] hover:bg-[#005f56] text-white font-semibold py-2 px-4 rounded-lg">My Journey</a>
-            <button id="logout-btn" class="text-gray-600 hover:text-[#007367] dark:text-gray-400 font-semibold">Log Out</button>
-        `;
-        const mobileNavContent = `
-            <a href="#features" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300">How It Works</a>
-            <a href="#discover" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300">Discover</a>
-            <a href="dashboard.html" class="block py-2 px-4 text-sm text-white bg-[#007367]">My Journey</a>
-            <button id="mobile-logout-btn" class="w-full text-left block py-2 px-4 text-sm text-red-600 hover:bg-gray-100">Log Out</button>
-        `;
-        if (navLinksContainer) navLinksContainer.innerHTML = navContent;
-        if (mobileMenuNav) mobileMenuNav.innerHTML = mobileNavContent;
-
-        document.getElementById('logout-btn')?.addEventListener('click', handleLogout);
-        document.getElementById('mobile-logout-btn')?.addEventListener('click', handleLogout);
+        // If a user is logged in, immediately redirect them to the dashboard.
+        // This handles users returning from Google and any logged-in user visiting the homepage.
+        window.location.href = 'dashboard.html';
+        return; // Stop the rest of the script from running
     }
 
-    async function handleLogout() {
-        await supabaseClient.auth.signOut();
-        window.location.reload();
-    }
-
-    // --- Your Original Code for UI Interactivity ---
+    // --- If no session, the user is logged out. Set up the page normally. ---
 
     // Mobile Menu Toggle
-    const mobileMenuButton = document.getElementById('mobile-menu-button'); // Ensure your HTML has this ID
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenuNav = document.getElementById('mobile-menu');
     if (mobileMenuButton && mobileMenuNav) {
         mobileMenuButton.addEventListener('click', () => mobileMenuNav.classList.toggle('hidden'));
     }
