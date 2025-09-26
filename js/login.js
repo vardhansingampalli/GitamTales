@@ -90,7 +90,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 formMessage.textContent = `Error: ${error.message}`;
                 formMessage.className = 'text-center text-sm text-red-500';
             } else if (data.user) {
-                window.location.href = 'index.html';
+                // --- THIS IS THE CORRECTED LINE ---
+                window.location.href = 'dashboard.html';
             }
         } catch (e) {
             formMessage.textContent = 'A critical error occurred. Please try again.';
