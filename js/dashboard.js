@@ -17,6 +17,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const profileMenuButton = document.getElementById('profile-menu-button');
     const profileMenu = document.getElementById('profile-menu');
     const logoutButton = document.getElementById('logout-button');
+    const addTaleButton = document.getElementById('add-tale-button');
+    const addTaleModal = document.getElementById('add-tale-modal');
+    const closeModalButton = document.getElementById('close-modal-button');
+    const taleForm = document.getElementById('tale-form');
     
     // --- Main Functions ---
 
@@ -36,21 +40,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const displayName = profile?.full_name || user.email.split('@')[0];
+        const avatarUrl = profile?.avatar_url || `https://placehold.co/100x100/e0e7ff/3730a3?text=${displayName.charAt(0).toUpperCase()}`;
         
         // Update header
         profileMenuButton.querySelector('span').textContent = displayName;
-        profileMenuButton.querySelector('img').src = profile?.avatar_url || `https://placehold.co/40x40/e0e7ff/3730a3?text=${displayName.charAt(0).toUpperCase()}`;
+        profileMenuButton.querySelector('img').src = avatarUrl.replace('100x100', '40x40');
         
         // Update sidebar
         const sidebar = document.querySelector('aside');
         sidebar.querySelector('h2').textContent = displayName;
         sidebar.querySelector('.text-gray-500').textContent = profile?.branch || 'Branch not set';
         sidebar.querySelector('.text-sm.text-gray-600').textContent = profile?.bio || 'No bio yet.';
-        sidebar.querySelector('img').src = profile?.avatar_url || `https://placehold.co/100x100/e0e7ff/3730a3?text=${displayName.charAt(0).toUpperCase()}`;
+        sidebar.querySelector('img').src = avatarUrl;
 
         // Update "Create Tale" box
-        document.getElementById('add-tale-button').textContent = `What's new on your journey, ${displayName}?`;
-        document.querySelector('#add-tale-button').previousElementSibling.src = profile?.avatar_url || `https://placehold.co/40x40/e0e7ff/3730a3?text=${displayName.charAt(0).toUpperCase()}`;
+        addTaleButton.textContent = `What's new on your journey, ${displayName}?`;
+        addTaleButton.previousElementSibling.src = avatarUrl.replace('100x100', '40x40');
     }
 
     /**
@@ -59,10 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function loadTales() {
         const { data: tales, error } = await supabaseClient
             .from('tales')
-            .select(`
-                *,
-                profiles ( full_name, avatar_url )
-            `)
+            .select(`*, profiles ( full_name, avatar_url )`)
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -70,7 +72,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        // Clear only the tale cards, not the "create tale" box
         timelineFeed.querySelectorAll('.tale-card').forEach(card => card.remove());
 
         if (tales.length === 0) {
@@ -85,7 +86,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     /**
      * Creates the HTML for a single tale card.
-     * @param {object} tale - The tale object from Supabase.
      */
     function createTaleCard(tale) {
         const authorName = tale.profiles?.full_name || 'A Gitamite';
@@ -119,7 +119,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- Load initial data and set up event listeners ---
     
-    // Load profile and tales when the page loads
     await Promise.all([loadUserProfile(), loadTales()]);
 
     // Handle profile dropdown menu
@@ -133,5 +132,50 @@ document.addEventListener('DOMContentLoaded', async () => {
         e.preventDefault();
         await supabaseClient.auth.signOut();
         window.location.href = 'index.html';
+    });
+
+    // Handle "Add New Tale" modal
+    addTaleButton.addEventListener('click', () => addTaleModal.classList.remove('hidden'));
+    closeModalButton.addEventListener('click', () => addTaleModal.classList.add('hidden'));
+    addTaleModal.addEventListener('click', (event) => {
+        if (event.target === addTaleModal) {
+            addTaleModal.classList.add('hidden');
+        }
+    });
+
+    // --- THIS IS THE NEW, FUNCTIONAL CODE FOR THE FORM ---
+    taleForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        
+        const formButton = taleForm.querySelector('button[type="submit"]');
+        formButton.disabled = true;
+        formButton.textContent = 'Posting...';
+
+        const formData = new FormData(taleForm);
+        const taleData = Object.fromEntries(formData.entries());
+        
+        // Add the user ID to the data
+        taleData.user_id = user.id;
+
+        // Convert comma-separated tags into a string array
+        taleData.tags = taleData.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+        
+        // Insert the new tale into the database
+        const { error } = await supabaseClient
+            .from('tales')
+            .insert([taleData]);
+
+        if (error) {
+            console.error('Error posting tale:', error);
+            alert('Sorry, there was an error posting your tale.');
+        } else {
+            // SUCCESS!
+            addTaleModal.classList.add('hidden'); // Close the modal
+            taleForm.reset(); // Reset the form fields
+            await loadTales(); // Refresh the entire feed to show the new post
+        }
+        
+        formButton.disabled = false;
+        formButton.textContent = 'Post Tale';
     });
 });
