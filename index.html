@@ -13,35 +13,35 @@
 <body class="bg-gray-50 text-gray-800">
 
     <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 border-b border-gray-200">
-    <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
-        <a href="index.html" class="flex items-center space-x-3">
-            <img src="assets/images/logo.png" alt="GitamTales Logo" class="h-8 w-auto">
-            <span class="text-2xl font-bold text-gray-900">GitamTales</span>
-        </a>
-
-        <div class="hidden md:flex items-center space-x-6">
-            <a href="#features" class="text-gray-600 hover:text-[#007367] transition-colors">How It Works</a>
-            <a href="#discover" class="text-gray-600 hover:text-[#007367] transition-colors">Discover</a>
-            <a href="login.html" class="text-gray-600 hover:text-[#007367] transition-colors">Log In</a>
-            <a href="signup.html" class="bg-[#007367] hover:bg-[#005f56] text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all transform hover:scale-105">Sign Up</a>
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="index.html" class="flex items-center space-x-3">
+                <img src="assets/images/logo.png" alt="GitamTales Logo" class="h-8 w-auto">
+                <span class="text-2xl font-bold text-gray-900">GitamTales</span>
+            </a>
+    
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="#features" class="text-gray-600 hover:text-[#007367] transition-colors">How It Works</a>
+                <a href="#discover" class="text-gray-600 hover:text-[#007367] transition-colors">Discover</a>
+                <a href="login.html" class="text-gray-600 hover:text-[#007367] transition-colors">Log In</a>
+                <a href="signup.html" class="bg-[#007367] hover:bg-[#005f56] text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all transform hover:scale-105">Sign Up</a>
+            </div>
+    
+            <div class="md:hidden flex items-center">
+                <button id="mobile-menu-button" class="text-gray-600 hover:text-gray-900 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+                    </svg>
+                </button>
+            </div>
+        </nav>
+    
+        <div id="mobile-menu" class="hidden md:hidden">
+            <a href="#features" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">How It Works</a>
+            <a href="#discover" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">Discover</a>
+            <a href="login.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">Log In</a>
+            <a href="signup.html" class="block py-2 px-4 text-sm text-white bg-[#007367] hover:bg-[#005f56]">Sign Up</a>
         </div>
-
-        <div class="md:hidden flex items-center">
-            <button id="mobile-menu-button" class="text-gray-600 hover:text-gray-900 focus:outline-none">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
-                </svg>
-            </button>
-        </div>
-    </nav>
-
-    <div id="mobile-menu" class="hidden md:hidden">
-        <a href="#features" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">How It Works</a>
-        <a href="#discover" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">Discover</a>
-        <a href="login.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">Log In</a>
-        <a href="signup.html" class="block py-2 px-4 text-sm text-white bg-[#007367] hover:bg-[#005f56]">Sign Up</a>
-    </div>
-</header>
+    </header>
 
     <main>
         <section class="py-12 md:py-16 bg-white">
@@ -55,25 +55,25 @@
         <section id="features" class="py-12">
             <div class="container mx-auto px-6">
                  <div class="text-center mb-12">
-                     <h2 class="text-3xl md:text-4xl font-bold text-gray-900">How It Works</h2>
-                     <p class="text-gray-600 mt-2">A simple, powerful way to showcase your growth.</p>
+                      <h2 class="text-3xl md:text-4xl font-bold text-gray-900">How It Works</h2>
+                      <p class="text-gray-600 mt-2">A simple, powerful way to showcase your growth.</p>
                  </div>
                  <div class="grid md:grid-cols-3 gap-10 text-center">
-                     <div class="bg-white p-8 rounded-xl shadow-md border border-gray-100 animate-fade-in-down">
-                         <div class="bg-green-100 text-[#007367] rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></div>
-                         <h3 class="text-xl font-semibold text-gray-900 mb-2">Document</h3>
-                         <p class="text-gray-600">Build your interactive portfolio.</p>
-                     </div>
-                     <div class="bg-white p-8 rounded-xl shadow-md border border-gray-100 animate-fade-in-down">
-                          <div class="bg-green-100 text-[#007367] rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></div>
-                         <h3 class="text-xl font-semibold text-gray-900 mb-2">Showcase</h3>
-                         <p class="text-gray-600">Make a real impression with a verified profile that proves your skills and helps you stand out.</p>
-                     </div>
-                     <div class="bg-white p-8 rounded-xl shadow-md border border-gray-100 animate-fade-in-down">
-                          <div class="bg-green-100 text-[#007367] rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></div>
-                         <h3 class="text-xl font-semibold text-gray-900 mb-2">Discover</h3>
-                         <p class="text-gray-600">Learn from the successful paths of others and connect with mentors, peers, and top recruiters.</p>
-                     </div>
+                      <div class="bg-white p-8 rounded-xl shadow-md border border-gray-100 animate-fade-in-down">
+                           <div class="bg-green-100 text-[#007367] rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></div>
+                           <h3 class="text-xl font-semibold text-gray-900 mb-2">Document</h3>
+                           <p class="text-gray-600">Build your interactive portfolio.</p>
+                      </div>
+                      <div class="bg-white p-8 rounded-xl shadow-md border border-gray-100 animate-fade-in-down">
+                           <div class="bg-green-100 text-[#007367] rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></div>
+                           <h3 class="text-xl font-semibold text-gray-900 mb-2">Showcase</h3>
+                           <p class="text-gray-600">Make a real impression with a verified profile that proves your skills and helps you stand out.</p>
+                      </div>
+                      <div class="bg-white p-8 rounded-xl shadow-md border border-gray-100 animate-fade-in-down">
+                           <div class="bg-green-100 text-[#007367] rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></div>
+                           <h3 class="text-xl font-semibold text-gray-900 mb-2">Discover</h3>
+                           <p class="text-gray-600">Learn from the successful paths of others and connect with mentors, peers, and top recruiters.</p>
+                      </div>
                  </div>
             </div>
         </section>
@@ -199,6 +199,7 @@
     </footer>
 
     <script src="js/main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-client.js"></script>
 </body>
 </html>
-
