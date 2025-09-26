@@ -12,96 +12,95 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-client.js"></script>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-50">
 
     <header class="bg-white shadow-sm sticky top-0 z-50">
-    <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
-        <a href="dashboard.html" class="text-2xl font-bold text-[#007367]">
-            GitamTales
-        </a>
-        
-        <div class="flex items-center space-x-4">
-            <div class="hidden md:block">
-                <input type="search" placeholder="Search Tales..." class="bg-gray-100 border-gray-200 rounded-lg px-4 py-2 text-sm focus:ring-[#007367] focus:border-[#007367]">
-            </div>
-
-            <div class="relative">
-                <button id="profile-menu-button" class="flex items-center space-x-2">
-                    <img src="https://placehold.co/40x40/e0e7ff/3730a3?text=A" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-gray-200">
-                    <span class="hidden sm:inline font-semibold text-gray-700">Ananya Sharma</span>
-                </button>
-                <div id="profile-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20">
-                    <a href="dashboard.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Journey</a>
-                    <a href="settings.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
-                    <hr class="my-1">
-                    <a href="index.html" id="logout-button" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Log Out</a>
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <a href="dashboard.html" class="text-2xl font-bold text-[#007367]">GitamTales</a>
+            <div class="flex items-center space-x-4">
+                <div class="hidden md:block">
+                    <input type="search" placeholder="Search Tales..." class="bg-gray-100 border-gray-200 rounded-lg px-4 py-2 text-sm focus:ring-[#007367] focus:border-[#007367]">
+                </div>
+                <div class="relative">
+                    <button id="profile-menu-button" class="flex items-center space-x-2">
+                        <img src="https://placehold.co/40x40/e0e7ff/3730a3?text=A" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-gray-200">
+                        <span class="hidden sm:inline font-semibold text-gray-700">vgavara</span>
+                    </button>
+                    <div id="profile-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20">
+                        <a href="dashboard.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Journey</a>
+                        <a href="settings.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
+                        <hr class="my-1">
+                        <a href="index.html" id="logout-button" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Log Out</a>
+                    </div>
                 </div>
             </div>
-        </div>
-    </nav>
-</header>
+        </nav>
+    </header>
 
     <main class="container mx-auto px-6 py-8">
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
 
             <aside class="lg:col-span-1">
-                <div class="bg-white p-6 rounded-xl shadow-md sticky top-24">
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 sticky top-24">
                     <div class="text-center">
-                        <img src="https://placehold.co/100x100/e0e7ff/3730a3?text=A" alt="User Avatar" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white shadow-lg">
-                        <h2 class="text-2xl font-bold text-gray-900">Ananya Sharma</h2>
-                        <p class="text-gray-500">CSE, 2025</p>
-                        <p class="text-sm text-gray-600 mt-2">Aspiring data scientist & President of the Coding Club. Passionate about building cool things with code.</p>
+                        <img src="https://placehold.co/100x100/e0e7ff/3730a3?text=V" alt="User Avatar" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white shadow-lg">
+                        <h2 class="text-2xl font-bold text-gray-900">vgavara</h2>
+                        <p class="text-gray-500 text-sm">CSE, 2025</p>
+                        <p class="text-sm text-gray-600 mt-3 px-2">Aspiring data scientist & President of the Coding Club. Passionate about building cool things with code.</p>
                     </div>
+                    
+                    <div class="flex justify-around text-center my-6">
+                        <div>
+                            <p class="font-bold text-xl text-gray-800">12</p>
+                            <p class="text-xs text-gray-500">Tales</p>
+                        </div>
+                        <div>
+                            <p class="font-bold text-xl text-gray-800">158</p>
+                            <p class="text-xs text-gray-500">Likes</p>
+                        </div>
+                        <div>
+                            <p class="font-bold text-xl text-gray-800">#5</p>
+                            <p class="text-xs text-gray-500">Rank</p>
+                        </div>
+                    </div>
+
                     <hr class="my-6">
                     <div>
-                        <h3 class="font-bold text-gray-800 mb-3">Skills</h3>
+                        <h3 class="font-bold text-gray-800 mb-3 text-sm uppercase tracking-wider">Skills</h3>
                         <div class="flex flex-wrap gap-2">
-                            <span class="bg-green-100 text-[#007367] text-xs font-semibold px-3 py-1 rounded-full">Python</span>
-                            <span class="bg-green-100 text-[#007367] text-xs font-semibold px-3 py-1 rounded-full">JavaScript</span>
-                            <span class="bg-green-100 text-[#007367] text-xs font-semibold px-3 py-1 rounded-full">React</span>
-                            <span class="bg-green-100 text-[#007367] text-xs font-semibold px-3 py-1 rounded-full">Node.js</span>
-                            <span class="bg-green-100 text-[#007367] text-xs font-semibold px-3 py-1 rounded-full">SQL</span>
+                            <span class="bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full">Python</span>
+                            <span class="bg-yellow-100 text-yellow-800 text-xs font-semibold px-3 py-1 rounded-full">JavaScript</span>
+                            <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">React</span>
                         </div>
                     </div>
                 </div>
             </aside>
 
             <div id="timeline-feed" class="lg:col-span-3">
-                <div class="bg-white p-4 rounded-xl shadow-md mb-6 flex items-center gap-4">
-                    <img src="https://placehold.co/40x40/e0e7ff/3730a3?text=A" alt="User Avatar" class="w-10 h-10 rounded-full">
-                    <button id="add-tale-button" class="w-full bg-gray-100 hover:bg-gray-200 text-left text-gray-500 rounded-full py-3 px-4 transition">What's new on your journey, Ananya?</button>
+                <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200 mb-6 flex items-center gap-4">
+                    <img src="https://placehold.co/40x40/e0e7ff/3730a3?text=V" alt="User Avatar" class="w-10 h-10 rounded-full">
+                    <button id="add-tale-button" class="w-full bg-gray-100 hover:bg-gray-200 text-left text-gray-500 rounded-full py-3 px-4 transition">What's new on your journey, vgavara?</button>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-md mb-6 overflow-hidden">
+                <div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6 overflow-hidden">
                     <div class="p-6">
                         <div class="flex items-center mb-4">
                             <img src="https://placehold.co/40x40/e0e7ff/3730a3?text=A" alt="User Avatar" class="w-10 h-10 rounded-full mr-3">
                             <div>
                                 <h4 class="font-bold text-gray-900">Ananya Sharma</h4>
-                                <p class="text-sm text-gray-500">Posted in <span class="font-semibold text-[#007367]">Projects</span> &middot; 2 days ago</p>
+                                <p class="text-sm text-gray-500">Posted in <a href="#" class="font-semibold text-[#007367] hover:underline">Projects</a> &middot; 2 days ago</p>
                             </div>
                         </div>
-                        <h3 class="text-xl font-semibold mb-2">Developed a Full-Stack E-commerce Website</h3>
-                        <p class="text-gray-700 mb-4">Completed a major personal project building an e-commerce platform from scratch using the MERN stack. Features include user authentication, product catalog, shopping cart, and a mock payment gateway.</p>
+                        <h3 class="text-xl font-semibold mb-2 text-gray-800">Developed a Full-Stack E-commerce Website</h3>
+                        <p class="text-gray-700 mb-4">Completed a major personal project building an e-commerce platform from scratch using the MERN stack...</p>
                     </div>
                     <img src="https://placehold.co/800x400/007367/ffffff?text=E-commerce+Project" alt="Project Image" class="w-full h-auto">
-                    <div class="p-4 border-t border-gray-100 flex justify-around">
-                        <button class="text-gray-600 hover:text-[#007367] flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg> Like</button>
-                        <button class="text-gray-600 hover:text-[#007367] flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg> Comment</button>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-xl shadow-md mb-6">
-                    <div class="p-6">
-                        <div class="flex items-center mb-4">
-                            <img src="https://placehold.co/40x40/e0e7ff/3730a3?text=A" alt="User Avatar" class="w-10 h-10 rounded-full mr-3">
-                            <div>
-                                <h4 class="font-bold text-gray-900">Ananya Sharma</h4>
-                                <p class="text-sm text-gray-500">Posted in <span class="font-semibold text-[#007367]">Achievements</span> &middot; 1 week ago</p>
-                            </div>
+                    <div class="p-4 border-t border-gray-100 flex justify-between items-center">
+                        <div class="flex gap-4">
+                            <button class="text-gray-600 hover:text-red-500 flex items-center gap-2 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg> 25</button>
+                            <button class="text-gray-600 hover:text-blue-500 flex items-center gap-2 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg> 7</button>
                         </div>
-                        <h3 class="text-xl font-semibold mb-2">Won 1st Place in the 'CodeSprint' Hackathon</h3>
-                        <p class="text-gray-700">Our team, 'The Bug Slayers', took home the top prize for our mobile app that helps students find and share study resources on campus.</p>
+                        <button class="text-gray-500 hover:text-gray-800"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342A2 2 0 0110 12h4a2 2 0 110 4h-4a2 2 0 01-1.316-.658L6 14zM18 12a6 6 0 10-12 0 6 6 0 0012 0z"></path></svg></button>
                     </div>
                 </div>
             </div>
@@ -109,45 +108,8 @@
     </main>
 
     <div id="add-tale-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl transform transition-all">
-            <div class="flex justify-between items-center p-4 border-b border-gray-200">
-                <h3 class="text-xl font-bold text-gray-800">Create a New Tale</h3>
-                <button id="close-modal-button" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            <form id="tale-form" class="p-6 space-y-4">
-                <div>
-                    <label for="tale-category" class="block text-sm font-medium text-gray-700">Category</label>
-                    <select id="tale-category" name="category" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg focus:ring-[#007367] focus:border-[#007367] transition">
-                        <option>Projects</option>
-                        <option>Academics</option>
-                        <option>Achievements</option>
-                        <option>Leadership & Events</option>
-                        <option>Research & Papers</option>
-                        <option>Reflections</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="tale-title" class="block text-sm font-medium text-gray-700">Title</label>
-                    <input type="text" id="tale-title" name="title" required class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg focus:ring-[#007367] focus:border-[#007367] transition" placeholder="e.g., Developed a Full-Stack App">
-                </div>
-                <div>
-                    <label for="tale-description" class="block text-sm font-medium text-gray-700">Description</label>
-                    <textarea id="tale-description" name="description" rows="4" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg focus:ring-[#007367] focus:border-[#007367] transition" placeholder="Share the details of your experience..."></textarea>
-                </div>
-                 <div>
-                    <label for="tale-tags" class="block text-sm font-medium text-gray-700">Tags (comma-separated)</label>
-                    <input type="text" id="tale-tags" name="tags" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg focus:ring-[#007367] focus:border-[#007367] transition" placeholder="e.g., React, Node.js, Leadership">
-                </div>
-            </form>
-            <div class="flex justify-end items-center p-4 bg-gray-50 border-t border-gray-200 rounded-b-xl">
-                <button type="submit" form="tale-form" class="bg-[#007367] hover:bg-[#005f56] text-white font-bold py-2 px-6 rounded-lg transition-all">Post Tale</button>
-            </div>
         </div>
-    </div>
 
     <script src="js/dashboard.js"></script>
 </body>
-
 </html>
