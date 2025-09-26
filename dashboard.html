@@ -15,31 +15,31 @@
 <body class="bg-gray-100">
 
     <header class="bg-white shadow-sm sticky top-0 z-50">
-        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
-            <a href="dashboard.html" class="text-2xl font-bold text-[#007367]">
-                GitamTales
-            </a>
-            
-            <div class="flex items-center space-x-4">
-                <div class="hidden md:block">
-                    <input type="search" placeholder="Search Tales..." class="bg-gray-100 border-gray-200 rounded-lg px-4 py-2 text-sm focus:ring-[#007367] focus:border-[#007367]">
-                </div>
+    <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+        <a href="dashboard.html" class="text-2xl font-bold text-[#007367]">
+            GitamTales
+        </a>
+        
+        <div class="flex items-center space-x-4">
+            <div class="hidden md:block">
+                <input type="search" placeholder="Search Tales..." class="bg-gray-100 border-gray-200 rounded-lg px-4 py-2 text-sm focus:ring-[#007367] focus:border-[#007367]">
+            </div>
 
-                <div class="relative">
-                    <button id="profile-menu-button" class="flex items-center space-x-2">
-                        <img src="https://placehold.co/40x40/e0e7ff/3730a3?text=A" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-gray-200">
-                        <span class="hidden sm:inline font-semibold text-gray-700">Ananya Sharma</span>
-                    </button>
-                    <div id="profile-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20">
-                        <a href="/dashboard.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Journey</a>
-                        <a href="/settings.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
-                        <hr class="my-1">
-                        <a href="/index.html" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Log Out</a>
-                    </div>
+            <div class="relative">
+                <button id="profile-menu-button" class="flex items-center space-x-2">
+                    <img src="https://placehold.co/40x40/e0e7ff/3730a3?text=A" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-gray-200">
+                    <span class="hidden sm:inline font-semibold text-gray-700">Ananya Sharma</span>
+                </button>
+                <div id="profile-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20">
+                    <a href="dashboard.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Journey</a>
+                    <a href="settings.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
+                    <hr class="my-1">
+                    <a href="index.html" id="logout-button" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Log Out</a>
                 </div>
             </div>
-        </nav>
-    </header>
+        </div>
+    </nav>
+</header>
 
     <main class="container mx-auto px-6 py-8">
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -149,4 +149,5 @@
 
     <script src="js/dashboard.js"></script>
 </body>
+
 </html>
