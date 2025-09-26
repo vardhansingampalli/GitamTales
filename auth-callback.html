@@ -15,12 +15,18 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-client.js"></script>
     <script>
-        // This script waits for the login session and redirects.
-        supabaseClient.auth.onAuthStateChange((event, session) => {
+        // This new script is more direct and reliable
+        (async () => {
+            // Supabase client automatically handles the session from the URL
+            const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
+                // If a session is found, go directly to the dashboard
                 window.location.href = 'dashboard.html';
+            } else {
+                // If no session is found, go back to the login page to prevent getting stuck
+                window.location.href = 'login.html';
             }
-        });
+        })();
     </script>
 </body>
 </html>
