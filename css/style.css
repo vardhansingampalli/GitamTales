@@ -1,0 +1,66 @@
+/* Set Inter as the default font for the entire site */
+body {
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden; /* Prevents horizontal scrollbar from animation */
+}
+
+/* Simple animation for hero section fade-in */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+}
+
+/* Animation for new posts appearing on the timeline */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in-down {
+    animation: fadeInDown 0.5s ease-out forwards;
+}
+
+/* Add top margin for scroll-to-anchor links to avoid overlapping the sticky header */
+section[id] {
+  scroll-margin-top: 80px; /* Adjust this value if your header height changes */
+}
+
+/* BIG ANIMATION: Animated Gradient Background */
+@keyframes AnimateBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.animated-gradient {
+    position: relative;
+    z-index: 10;
+    overflow: hidden;
+    
+    /* Base styles for the animated gradient */
+    background: linear-gradient(270deg, #007367, #005f56, #2d3748, #1a202c);
+    background-size: 400% 400%;
+    animation: AnimateBG 20s ease infinite;
+}
+
+/* Dark mode specific gradient styles */
+.dark .animated-gradient {
+    background: linear-gradient(270deg, #00c2aa, #00a39a, #1a202c, #000000);
+}
+
+/* The content on top of the animation */
+.animated-gradient .content {
+    position: relative;
+    z-index: 20;
+    isolation: isolate;
+}
