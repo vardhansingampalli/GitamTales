@@ -77,38 +77,54 @@
             </aside>
 
             <div id="timeline-feed" class="lg:col-span-3">
+                
                 <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200 mb-6 flex items-center gap-4">
                     <img src="https://placehold.co/40x40/e0e7ff/3730a3?text=V" alt="User Avatar" class="w-10 h-10 rounded-full">
                     <button id="add-tale-button" class="w-full bg-gray-100 hover:bg-gray-200 text-left text-gray-500 rounded-full py-3 px-4 transition">What's new on your journey, vgavara?</button>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6 overflow-hidden">
-                    <div class="p-6">
-                        <div class="flex items-center mb-4">
-                            <img src="https://placehold.co/40x40/e0e7ff/3730a3?text=A" alt="User Avatar" class="w-10 h-10 rounded-full mr-3">
-                            <div>
-                                <h4 class="font-bold text-gray-900">Ananya Sharma</h4>
-                                <p class="text-sm text-gray-500">Posted in <a href="#" class="font-semibold text-[#007367] hover:underline">Projects</a> &middot; 2 days ago</p>
-                            </div>
-                        </div>
-                        <h3 class="text-xl font-semibold mb-2 text-gray-800">Developed a Full-Stack E-commerce Website</h3>
-                        <p class="text-gray-700 mb-4">Completed a major personal project building an e-commerce platform from scratch using the MERN stack...</p>
-                    </div>
-                    <img src="https://placehold.co/800x400/007367/ffffff?text=E-commerce+Project" alt="Project Image" class="w-full h-auto">
-                    <div class="p-4 border-t border-gray-100 flex justify-between items-center">
-                        <div class="flex gap-4">
-                            <button class="text-gray-600 hover:text-red-500 flex items-center gap-2 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg> 25</button>
-                            <button class="text-gray-600 hover:text-blue-500 flex items-center gap-2 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg> 7</button>
-                        </div>
-                        <button class="text-gray-500 hover:text-gray-800"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342A2 2 0 0110 12h4a2 2 0 110 4h-4a2 2 0 01-1.316-.658L6 14zM18 12a6 6 0 10-12 0 6 6 0 0012 0z"></path></svg></button>
-                    </div>
                 </div>
-            </div>
         </div>
     </main>
 
     <div id="add-tale-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl transform transition-all">
+            <div class="flex justify-between items-center p-4 border-b border-gray-200">
+                <h3 class="text-xl font-bold text-gray-800">Create a New Tale</h3>
+                <button id="close-modal-button" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <form id="tale-form" class="p-6 space-y-4">
+                <div>
+                    <label for="tale-category" class="block text-sm font-medium text-gray-700">Category</label>
+                    <select id="tale-category" name="category" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg focus:ring-[#007367] focus:border-[#007367] transition">
+                        <option>Projects</option>
+                        <option>Academics</option>
+                        <option>Achievements</option>
+                        <option>Leadership & Events</option>
+                        <option>Research & Papers</option>
+                        <option>Reflections</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="tale-title" class="block text-sm font-medium text-gray-700">Title</label>
+                    <input type="text" id="tale-title" name="title" required class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg focus:ring-[#007367] focus:border-[#007367] transition" placeholder="e.g., Developed a Full-Stack App">
+                </div>
+                <div>
+                    <label for="tale-description" class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea id="tale-description" name="description" rows="4" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg focus:ring-[#007367] focus:border-[#007367] transition" placeholder="Share the details of your experience..."></textarea>
+                </div>
+                 <div>
+                    <label for="tale-tags" class="block text-sm font-medium text-gray-700">Tags (comma-separated)</label>
+                    <input type="text" id="tale-tags" name="tags" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg focus:ring-[#007367] focus:border-[#007367] transition" placeholder="e.g., React, Node.js, Leadership">
+                </div>
+            </form>
+            <div class="flex justify-end items-center p-4 bg-gray-50 border-t border-gray-200 rounded-b-xl">
+                <button type="submit" form="tale-form" class="bg-[#007367] hover:bg-[#005f56] text-white font-bold py-2 px-6 rounded-lg transition-all">Post Tale</button>
+            </div>
         </div>
+    </div>
 
     <script src="js/dashboard.js"></script>
 </body>
