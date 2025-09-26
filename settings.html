@@ -11,7 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-client.js"></script>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-50">
 
     <header class="bg-white shadow-sm sticky top-0 z-50">
         <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
@@ -21,32 +21,60 @@
         </nav>
     </header>
 
-    <main class="container mx-auto px-6 py-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-6">Profile Settings</h1>
+    <main class="container mx-auto px-6 py-10">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Profile Settings</h1>
+            <p class="text-gray-600 mb-8">This information will be displayed publicly on your profile.</p>
 
-        <div class="bg-white p-8 rounded-xl shadow-md max-w-2xl mx-auto">
-            <form id="settings-form" class="space-y-6">
-                <div>
-                    <label for="full-name" class="block text-sm font-medium text-gray-700">Full Name</label>
-                    <input type="text" id="full-name" name="full_name" required class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg focus:ring-[#007367] focus:border-[#007367] transition" placeholder="Enter your full name">
+            <form id="settings-form" class="bg-white p-8 rounded-xl shadow-md border border-gray-200">
+                <div class="flex items-center gap-6 pb-8 border-b border-gray-200">
+                    <img id="avatar-preview" src="https://placehold.co/100x100/e0e7ff/3730a3?text=A" alt="User Avatar" class="w-24 h-24 rounded-full object-cover">
+                    <div>
+                        <button type="button" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg text-sm">
+                            Change Picture
+                        </button>
+                        <p class="text-xs text-gray-500 mt-2">PNG, JPG, GIF up to 10MB.</p>
+                    </div>
                 </div>
 
-                <div>
-                    <label for="branch" class="block text-sm font-medium text-gray-700">Branch & Year</label>
-                    <input type="text" id="branch" name="branch" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg focus:ring-[#007367] focus:border-[#007367] transition" placeholder="e.g., CSE, 2025">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8">
+                    <div>
+                        <label for="full-name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                        <input type="text" id="full-name" name="full_name" required class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg focus:ring-[#007367] focus:border-[#007367] transition" placeholder="Your full name">
+                    </div>
+                    <div>
+                        <label for="branch" class="block text-sm font-medium text-gray-700">Branch & Year</label>
+                        <input type="text" id="branch" name="branch" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg focus:ring-[#007367] focus:border-[#007367] transition" placeholder="e.g., CSE, 2025">
+                    </div>
                 </div>
 
-                <div>
+                <div class="mt-6">
                     <label for="bio" class="block text-sm font-medium text-gray-700">Bio</label>
                     <textarea id="bio" name="bio" rows="4" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg focus:ring-[#007367] focus:border-[#007367] transition" placeholder="Tell everyone a little about yourself..."></textarea>
                 </div>
 
-                <p id="form-message" class="text-center text-sm"></p>
+                <div class="pt-8 mt-8 border-t border-gray-200">
+                     <h2 class="text-lg font-semibold text-gray-900">Social Links</h2>
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                        <div>
+                            <label for="linkedin-url" class="block text-sm font-medium text-gray-700">LinkedIn URL</label>
+                            <input type="url" id="linkedin-url" name="linkedin_url" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg" placeholder="https://linkedin.com/in/yourprofile">
+                        </div>
+                        <div>
+                            <label for="github-url" class="block text-sm font-medium text-gray-700">GitHub URL</label>
+                            <input type="url" id="github-url" name="github_url" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg" placeholder="https://github.com/yourusername">
+                        </div>
+                     </div>
+                </div>
 
-                <div class="flex justify-end">
-                    <button type="submit" class="bg-[#007367] hover:bg-[#005f56] text-white font-bold py-3 px-6 rounded-lg transition-all">
-                        Save Changes
-                    </button>
+                <div class="mt-8 pt-6 border-t border-gray-200">
+                    <p id="form-message" class="text-center text-sm mb-4"></p>
+                    <div class="flex justify-end items-center gap-4">
+                        <a href="dashboard.html" class="text-sm font-semibold text-gray-600 hover:text-gray-900">Cancel</a>
+                        <button type="submit" class="bg-[#007367] hover:bg-[#005f56] text-white font-bold py-3 px-6 rounded-lg transition-all">
+                            Save Changes
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
