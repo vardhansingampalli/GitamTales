@@ -27,3 +27,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (yearSpan) yearSpan.textContent = new Date().getFullYear();
     
 });
+
