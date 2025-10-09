@@ -10,6 +10,12 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* In your css/style.css file */
+
+.scroll-target {
+  scroll-margin-top: 5rem; /* Adjust this value if needed to match your header's height */
+}
+
 .fade-in {
     animation: fadeIn 0.8s ease-out forwards;
 }
