@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     taleForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         
-        const formButton = taleForm.querySelector('button[type="submit"]');
+        const formButton = document.getElementById('submit-tale-button');
         formButton.disabled = true;
         formButton.textContent = 'Posting...';
 
