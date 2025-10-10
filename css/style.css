@@ -3,7 +3,10 @@ body {
     font-family: 'Inter', sans-serif;
     overflow-x: hidden; /* Prevents horizontal scrollbar from animation */
 }
-
+.initially-hidden {
+  opacity: 0;
+  transition: opacity 0.5s;
+}
 /* Simple animation for hero section fade-in */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
@@ -70,3 +73,4 @@ section[id] {
     z-index: 20;
     isolation: isolate;
 }
+
