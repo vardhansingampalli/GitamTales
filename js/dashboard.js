@@ -21,9 +21,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const addTaleModal = document.getElementById('add-tale-modal');
     const closeModalButton = document.getElementById('close-modal-button');
     const taleForm = document.getElementById('tale-form');
+    const submitTaleButton = document.getElementById('submit-tale-button');
+    // === NEW LINE ADDED HERE ===
+    const talesCountElement = document.getElementById('tales-count');
     
     // --- Main Functions ---
 
+    /**
+     * Fetches the current user's profile and updates the UI.
+     */
     async function loadUserProfile() {
         const { data: profile, error } = await supabaseClient
             .from('profiles')
@@ -31,32 +37,37 @@ document.addEventListener('DOMContentLoaded', async () => {
             .eq('id', user.id)
             .single();
 
-        if (error && error.code !== 'PGRST116') {
+        if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found, which is okay
             console.error('Error fetching profile:', error);
             return;
         }
 
         const displayName = profile?.full_name || user.email.split('@')[0];
-        const avatarUrl = profile?.avatar_url || `https://placehold.co/100x100/e0e7ff/3730a3?text=${displayName.charAt(0).toUpperCase()}`;
+        const avatarUrl = profile?.avatar_url ? `${profile.avatar_url}?t=${new Date().getTime()}` : `https://placehold.co/100x100/e0e7ff/3730a3?text=${displayName.charAt(0).toUpperCase()}`;
         
+        // Update header
         profileMenuButton.querySelector('span').textContent = displayName;
         profileMenuButton.querySelector('img').src = avatarUrl.replace('100x100', '40x40');
         
+        // Update sidebar
         const sidebar = document.querySelector('aside');
         sidebar.querySelector('h2').textContent = displayName;
         sidebar.querySelector('.text-gray-500').textContent = profile?.branch || 'Branch not set';
         sidebar.querySelector('.text-sm.text-gray-600').textContent = profile?.bio || 'No bio yet.';
         sidebar.querySelector('img').src = avatarUrl;
 
+        // Update "Create Tale" box
         addTaleButton.textContent = `What's new on your journey, ${displayName}?`;
         addTaleButton.previousElementSibling.src = avatarUrl.replace('100x100', '40x40');
     }
 
+    /**
+     * Fetches all tales from the database and renders them to the feed.
+     */
     async function loadTales() {
         const { data: tales, error } = await supabaseClient
             .from('tales')
             .select(`*, profiles ( full_name, avatar_url )`)
-            .eq('user_id', user.id) // THE FIX IS HERE
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -64,10 +75,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
+        // === NEW LINE ADDED HERE ===
+        talesCountElement.textContent = tales.length;
+
+        // Clear existing feed before rendering new tales
         timelineFeed.querySelectorAll('.tale-card').forEach(card => card.remove());
 
         if (tales.length === 0) {
-            timelineFeed.insertAdjacentHTML('beforeend', '<p class="text-center text-gray-500 tale-card">You haven\'t posted any tales yet. Click above to share your first one!</p>');
+            timelineFeed.insertAdjacentHTML('beforeend', '<p class="text-center text-gray-500 tale-card">No tales yet. Be the first to post!</p>');
         } else {
             for (const tale of tales) {
                 const taleCard = createTaleCard(tale);
@@ -76,9 +91,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    /**
+     * Creates the HTML for a single tale card.
+     */
     function createTaleCard(tale) {
         const authorName = tale.profiles?.full_name || 'A Gitamite';
-        const authorAvatar = tale.profiles?.avatar_url || `https://placehold.co/40x40/e0e7ff/3730a3?text=${authorName.charAt(0).toUpperCase()}`;
+        const authorAvatar = tale.profiles?.avatar_url ? `${tale.profiles.avatar_url}?t=${new Date().getTime()}`: `https://placehold.co/40x40/e0e7ff/3730a3?text=${authorName.charAt(0).toUpperCase()}`;
         const postDate = new Date(tale.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
         return `
@@ -106,8 +124,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
     }
 
+    // --- Load initial data and set up event listeners ---
     await Promise.all([loadUserProfile(), loadTales()]);
 
+    // Handle profile dropdown menu
     profileMenuButton.addEventListener('click', () => profileMenu.classList.toggle('hidden'));
     document.addEventListener('click', (event) => {
         if (!profileMenuButton.contains(event.target) && !profileMenu.contains(event.target)) {
@@ -120,6 +140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = 'index.html';
     });
 
+    // Handle "Add New Tale" modal
     addTaleButton.addEventListener('click', () => addTaleModal.classList.remove('hidden'));
     closeModalButton.addEventListener('click', () => addTaleModal.classList.add('hidden'));
     addTaleModal.addEventListener('click', (event) => {
@@ -128,15 +149,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
     
+    // Handle the form submission for creating a new tale
     taleForm.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const formButton = document.getElementById('submit-tale-button');
-        formButton.disabled = true;
-        formButton.textContent = 'Posting...';
+        
+        submitTaleButton.disabled = true;
+        submitTaleButton.textContent = 'Posting...';
+
         const formData = new FormData(taleForm);
         const taleData = Object.fromEntries(formData.entries());
+        
         taleData.user_id = user.id;
-        const { error } = await supabaseClient.from('tales').insert([taleData]);
+
+        const { error } = await supabaseClient
+            .from('tales')
+            .insert([taleData]);
+
         if (error) {
             console.error('Error posting tale:', error);
             alert('Sorry, there was an error posting your tale.');
@@ -145,7 +173,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             taleForm.reset();
             await loadTales();
         }
-        formButton.disabled = false;
-        formButton.textContent = 'Post Tale';
+        
+        submitTaleButton.disabled = false;
+        submitTaleButton.textContent = 'Post Tale';
     });
 });
