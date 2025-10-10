@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             .eq('id', user.id)
             .single();
 
-        if (error && error.code !== 'PGRST116') {
+        if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found, which is okay
             console.error('Error fetching profile:', error);
             return;
         }
@@ -72,6 +72,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
+        // Clear existing feed before rendering new tales
         timelineFeed.querySelectorAll('.tale-card').forEach(card => card.remove());
 
         if (tales.length === 0) {
@@ -108,8 +109,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ${tale.image_url ? `<img src="${tale.image_url}" alt="Tale Image" class="w-full h-auto">` : ''}
                 <div class="p-4 border-t border-gray-100 flex justify-between items-center">
                     <div class="flex gap-4">
-                        <button class="text-gray-600 hover:text-red-500 flex items-center gap-2 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg> ${tale.like_count}</button>
-                        <button class="text-gray-600 hover:text-blue-500 flex items-center gap-2 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg> ${tale.comment_count}</button>
+                        
+                        <button class="text-gray-600 hover:text-red-500 flex items-center gap-2 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg> ${tale.like_count || 0}</button>
+                        <button class="text-gray-600 hover:text-blue-500 flex items-center gap-2 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg> ${tale.comment_count || 0}</button>
+
                     </div>
                     <button class="text-gray-500 hover:text-gray-800"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342A2 2 0 0110 12h4a2 2 0 110 4h-4a2 2 0 01-1.316-.658L6 14zM18 12a6 6 0 10-12 0 6 6 0 0012 0z"></path></svg></button>
                 </div>
@@ -119,6 +122,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- Load initial data and set up event listeners ---
     
+    // Load profile and tales at the same time for faster page load
     await Promise.all([loadUserProfile(), loadTales()]);
 
     // Handle profile dropdown menu
@@ -142,8 +146,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             addTaleModal.classList.add('hidden');
         }
     });
-
-    // --- THIS IS THE NEW, FUNCTIONAL CODE FOR THE FORM ---
+    
+    // Handle the form submission for creating a new tale
     taleForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         
@@ -157,8 +161,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Add the user ID to the data
         taleData.user_id = user.id;
 
-        // Convert comma-separated tags into a string array
-        taleData.tags = taleData.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+        // FIX 1: The line that converted tags to an array was removed.
+        // The database expects a simple text string, which formData provides by default.
         
         // Insert the new tale into the database
         const { error } = await supabaseClient
