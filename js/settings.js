@@ -25,9 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const profileMenuButton = document.getElementById('profile-menu-button');
     const profileMenu = document.getElementById('profile-menu');
     const logoutButton = document.getElementById('logout-button');
-    // --- ADDED FOR AVATAR UPLOAD ---
-    const changePictureButton = document.getElementById('change-picture-button');
-    const avatarUploadInput = document.getElementById('avatar-upload-input');
+    const avatarUploadInput = document.getElementById('avatar-upload-input'); // The hidden file input
 
 
     // --- 1. Fetch and Populate Profile Data ---
@@ -52,7 +50,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             githubUrlInput.value = profile.github_url || '';
 
             const displayName = profile.full_name || user.email.split('@')[0];
-            // Add a timestamp to the avatar URL to bypass browser cache
             const displayAvatar = profile.avatar_url ? `${profile.avatar_url}?t=${new Date().getTime()}` : `https://placehold.co/100x100/e0e7ff/3730a3?text=${displayName.charAt(0).toUpperCase()}`;
             
             avatarPreview.src = displayAvatar;
@@ -74,62 +71,47 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = 'index.html';
     });
 
-    // --- ADDED: AVATAR UPLOAD LOGIC ---
-    changePictureButton.addEventListener('click', () => {
-        avatarUploadInput.click(); // Trigger the hidden file input
-    });
-
+    // --- AVATAR UPLOAD LOGIC ---
+    // The 'change' event on the hidden input is now the only trigger we need.
     avatarUploadInput.addEventListener('change', async (event) => {
         const file = event.target.files[0];
         if (!file) {
-            return; // No file selected
+            return;
         }
 
-        changePictureButton.disabled = true;
-        changePictureButton.textContent = 'Uploading...';
+        const changePictureLabel = document.querySelector('label[for="avatar-upload-input"]');
+        const originalButtonText = changePictureLabel.textContent;
+        changePictureLabel.textContent = 'Uploading...';
+
 
         const fileExt = file.name.split('.').pop();
         const fileName = `${user.id}.${fileExt}`;
         const filePath = `${fileName}`;
 
-        // Upload the file to the 'avatars' bucket
         const { error: uploadError } = await supabaseClient.storage
             .from('avatars')
-            .upload(filePath, file, { upsert: true }); // 'upsert: true' will overwrite the existing file
+            .upload(filePath, file, { upsert: true });
 
         if (uploadError) {
             console.error('Error uploading avatar:', uploadError);
             alert('Error uploading avatar. Please try again.');
         } else {
-            // Get the public URL of the uploaded file
-            const { data } = supabaseClient.storage
-                .from('avatars')
-                .getPublicUrl(filePath);
-
+            const { data } = supabaseClient.storage.from('avatars').getPublicUrl(filePath);
             if (data.publicUrl) {
-                // Update the user's profile with the new avatar URL
-                const { error: updateError } = await supabaseClient
-                    .from('profiles')
-                    .update({ avatar_url: data.publicUrl })
-                    .eq('id', user.id);
-
+                const { error: updateError } = await supabaseClient.from('profiles').update({ avatar_url: data.publicUrl, updated_at: new Date() }).eq('id', user.id);
                 if (updateError) {
                     console.error('Error updating profile with new avatar URL:', updateError);
-                    alert('Error updating profile. Please try again.');
+                    alert('Error updating profile URL. Please try again.');
                 } else {
-                    // Success! Reload the profile to show the new image.
-                    await loadProfile();
+                    await loadProfile(); // Success! Reloads the page with the new image.
                 }
             }
         }
-
-        changePictureButton.disabled = false;
-        changePictureButton.textContent = 'Change Picture';
+        changePictureLabel.textContent = originalButtonText;
     });
 
-    // --- 2. Handle Form Submission to Update Profile ---
+    // --- FORM SUBMISSION FOR TEXT FIELDS ---
     settingsForm.addEventListener('submit', async (event) => {
-        // ... (This part remains the same as before) ...
         event.preventDefault();
         submitButton.disabled = true;
         submitButton.textContent = 'Saving...';
