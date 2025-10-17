@@ -31,20 +31,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
     async function loadUserProfile() {
-        const { data: profile, error } = await supabaseClient
-            .from('profiles')
-            .select('full_name, branch, bio, avatar_url')
-            .eq('id', user.id)
-            .single();
-
-        if (error && error.code !== 'PGRST116') {
-            console.error('Error fetching profile:', error);
-            return;
-        }
-
+        // ... (This function remains the same)
+        const { data: profile, error } = await supabaseClient.from('profiles').select('full_name, branch, bio, avatar_url').eq('id', user.id).single();
+        if (error && error.code !== 'PGRST116') { console.error('Error fetching profile:', error); return; }
         const displayName = profile?.full_name || user.email.split('@')[0];
         const avatarUrl = profile?.avatar_url ? `${profile.avatar_url}?t=${new Date().getTime()}` : `https://placehold.co/100x100/e0e7ff/3730a3?text=${displayName.charAt(0).toUpperCase()}`;
-        
         if(headerAvatarSkeleton) headerAvatarSkeleton.outerHTML = `<img src="${avatarUrl.replace('100x100', '40x40')}" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-gray-200">`;
         if(headerNameSkeleton) headerNameSkeleton.outerHTML = `<span class="hidden sm:inline font-semibold text-gray-700">${displayName}</span>`;
         if(sidebarAvatarSkeleton) sidebarAvatarSkeleton.outerHTML = `<img src="${avatarUrl}" alt="User Avatar" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white shadow-lg">`;
@@ -56,20 +47,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function loadTales() {
-        const { data: tales, error } = await supabaseClient
-            .from('tales')
-            .select(`*, profiles ( full_name, avatar_url )`)
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false });
-
-        if (error) {
-            console.error('Error fetching tales:', error);
-            return;
-        }
-
+        // ... (This function remains the same)
+        const { data: tales, error } = await supabaseClient.from('tales').select(`*, profiles ( full_name, avatar_url )`).eq('user_id', user.id).order('created_at', { ascending: false });
+        if (error) { console.error('Error fetching tales:', error); return; }
         talesCountElement.textContent = tales.length;
         timelineFeed.querySelectorAll('.tale-card').forEach(card => card.remove());
-
         if (tales.length === 0) {
             timelineFeed.insertAdjacentHTML('beforeend', '<p class="text-center text-gray-500 tale-card">You haven\'t posted any tales yet. Click the bar above to share your first journey!</p>');
         } else {
@@ -86,16 +68,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         const postDate = new Date(tale.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
         
         const isOwner = tale.user_id === user.id;
+
+        // === OWNER CONTROLS UPDATED TO SHOW ICONS ===
         const ownerControls = `
-            <div class="relative dropdown">
-                <button class="dropdown-button text-gray-500 hover:text-gray-800">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
+            <div class="flex items-center space-x-2">
+                <button data-tale-id="${tale.id}" class="edit-button text-gray-400 hover:text-blue-500 p-1 rounded-full transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                 </button>
-                <div class="dropdown-menu hidden absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-100">
-                    <button data-tale-id="${tale.id}" class="delete-button w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Delete</button>
-                </div>
+                <button data-tale-id="${tale.id}" class="delete-button text-gray-400 hover:text-red-500 p-1 rounded-full transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
             </div>
         `;
+        // === END OF UPDATED CONTROLS ===
 
         return `
             <div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6 overflow-hidden tale-card" id="tale-${tale.id}">
@@ -139,15 +124,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     closeModalButton.addEventListener('click', () => addTaleModal.classList.add('hidden'));
     addTaleModal.addEventListener('click', (event) => { if (event.target === addTaleModal) { addTaleModal.classList.add('hidden'); } });
     
-    // --- EVENT LISTENER FOR DYNAMIC BUTTONS (DROPDOWN AND DELETE) ---
+    // === EVENT LISTENER UPDATED FOR EDIT & DELETE ICONS ===
     timelineFeed.addEventListener('click', async (event) => {
-        const dropdownButton = event.target.closest('.dropdown-button');
+        const editButton = event.target.closest('.edit-button');
         const deleteButton = event.target.closest('.delete-button');
 
-        // Handle dropdown toggle
-        if (dropdownButton) {
-            const dropdownMenu = dropdownButton.nextElementSibling;
-            if(dropdownMenu) dropdownMenu.classList.toggle('hidden');
+        // Handle edit button click
+        if (editButton) {
+            const taleId = editButton.dataset.taleId;
+            console.log('Edit button clicked for tale ID:', taleId);
+            alert('Edit functionality will be built next!');
+            // We will add the logic to open a modal and edit the tale here.
         }
 
         // Handle delete button click
@@ -170,6 +157,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     
     taleForm.addEventListener('submit', async (event) => {
+        // ... (This function remains the same)
         event.preventDefault();
         submitTaleButton.disabled = true;
         submitTaleButton.textContent = 'Posting...';
