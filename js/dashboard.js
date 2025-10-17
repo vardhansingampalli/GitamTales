@@ -29,9 +29,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     const sidebarBioSkeleton = document.getElementById('sidebar-bio-skeleton');
     const createBarAvatarSkeleton = document.getElementById('create-bar-avatar-skeleton');
 
+    // --- Initialize Quill Rich Text Editor ---
+    const quill = new Quill('#description-editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, false] }],
+                ['bold', 'italic', 'underline'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['link']
+            ]
+        },
+        placeholder: 'Share the details of your experience...'
+    });
+
 
     async function loadUserProfile() {
-        // ... (This function remains the same)
+        // This function remains the same
         const { data: profile, error } = await supabaseClient.from('profiles').select('full_name, branch, bio, avatar_url').eq('id', user.id).single();
         if (error && error.code !== 'PGRST116') { console.error('Error fetching profile:', error); return; }
         const displayName = profile?.full_name || user.email.split('@')[0];
@@ -47,11 +61,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function loadTales() {
-        // ... (This function remains the same)
-        const { data: tales, error } = await supabaseClient.from('tales').select(`*, profiles ( full_name, avatar_url )`).eq('user_id', user.id).order('created_at', { ascending: false });
-        if (error) { console.error('Error fetching tales:', error); return; }
+        const { data: tales, error } = await supabaseClient
+            .from('tales')
+            .select(`*, profiles ( full_name, avatar_url )`)
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching tales:', error);
+            return;
+        }
+
         talesCountElement.textContent = tales.length;
         timelineFeed.querySelectorAll('.tale-card').forEach(card => card.remove());
+
         if (tales.length === 0) {
             timelineFeed.insertAdjacentHTML('beforeend', '<p class="text-center text-gray-500 tale-card">You haven\'t posted any tales yet. Click the bar above to share your first journey!</p>');
         } else {
@@ -65,11 +88,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     function createTaleCard(tale) {
         const authorName = tale.profiles?.full_name || 'A Gitamite';
         const authorAvatar = tale.profiles?.avatar_url ? `${tale.profiles.avatar_url}?t=${new Date().getTime()}`: `https://placehold.co/40x40/e0e7ff/3730a3?text=${authorName.charAt(0).toUpperCase()}`;
-        const postDate = new Date(tale.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        
+        // Use date-fns for relative time
+        const postDate = dateFns.formatDistanceToNow(new Date(tale.created_at), { addSuffix: true });
         
         const isOwner = tale.user_id === user.id;
 
-        // === OWNER CONTROLS UPDATED TO SHOW ICONS ===
         const ownerControls = `
             <div class="flex items-center space-x-2">
                 <button data-tale-id="${tale.id}" class="edit-button text-gray-400 hover:text-blue-500 p-1 rounded-full transition-colors">
@@ -80,7 +104,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </button>
             </div>
         `;
-        // === END OF UPDATED CONTROLS ===
+
+        // Conditionally show the cover image if it exists
+        const coverImageHTML = tale.cover_image_url 
+            ? `<img src="${tale.cover_image_url}" alt="Cover image for ${tale.title}" class="w-full h-auto object-cover border-t border-b border-gray-100">`
+            : '';
 
         return `
             <div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6 overflow-hidden tale-card" id="tale-${tale.id}">
@@ -96,9 +124,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                         ${isOwner ? ownerControls : ''}
                     </div>
                     <h3 class="text-xl font-semibold mb-2 text-gray-800">${tale.title}</h3>
-                    <p class="text-gray-700 mb-4">${tale.description}</p>
+                    <div class="prose max-w-none text-gray-700">${tale.description}</div>
                 </div>
-                <div class="p-4 border-t border-gray-100 flex justify-between items-center">
+                ${coverImageHTML}
+                <div class="p-4 flex justify-between items-center">
                     <div class="flex gap-4">
                         <button class="text-gray-600 hover:text-red-500 flex items-center gap-2 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg> ${tale.like_count || 0}</button>
                         <button class="text-gray-600 hover:text-blue-500 flex items-center gap-2 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg> ${tale.comment_count || 0}</button>
@@ -124,20 +153,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     closeModalButton.addEventListener('click', () => addTaleModal.classList.add('hidden'));
     addTaleModal.addEventListener('click', (event) => { if (event.target === addTaleModal) { addTaleModal.classList.add('hidden'); } });
     
-    // === EVENT LISTENER UPDATED FOR EDIT & DELETE ICONS ===
+    // --- EVENT LISTENER FOR DYNAMIC BUTTONS (EDIT & DELETE) ---
     timelineFeed.addEventListener('click', async (event) => {
         const editButton = event.target.closest('.edit-button');
         const deleteButton = event.target.closest('.delete-button');
 
-        // Handle edit button click
         if (editButton) {
             const taleId = editButton.dataset.taleId;
             console.log('Edit button clicked for tale ID:', taleId);
             alert('Edit functionality will be built next!');
-            // We will add the logic to open a modal and edit the tale here.
         }
 
-        // Handle delete button click
         if (deleteButton) {
             const taleId = deleteButton.dataset.taleId;
             const isConfirmed = confirm('Are you sure you want to delete this tale? This action cannot be undone.');
@@ -148,31 +174,60 @@ document.addEventListener('DOMContentLoaded', async () => {
                     console.error('Error deleting tale:', error);
                     alert('There was an error deleting your tale.');
                 } else {
-                    const taleCard = document.getElementById(`tale-${taleId}`);
-                    if (taleCard) taleCard.remove();
-                    await loadTales(); // Refresh the feed and count
+                    document.getElementById(`tale-${taleId}`)?.remove();
+                    await loadTales();
                 }
             }
         }
     });
     
+    // --- UPDATED EVENT LISTENER FOR THE NEW TALE FORM ---
     taleForm.addEventListener('submit', async (event) => {
-        // ... (This function remains the same)
         event.preventDefault();
         submitTaleButton.disabled = true;
         submitTaleButton.textContent = 'Posting...';
+
         const formData = new FormData(taleForm);
         const taleData = Object.fromEntries(formData.entries());
+        
+        taleData.description = quill.root.innerHTML;
+
+        const coverImageFile = formData.get('cover_image');
+        if (coverImageFile && coverImageFile.size > 0) {
+            const fileExt = coverImageFile.name.split('.').pop();
+            const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+            
+            const { error: uploadError } = await supabaseClient.storage
+                .from('tale-images')
+                .upload(fileName, coverImageFile);
+
+            if (uploadError) {
+                console.error('Error uploading cover image:', uploadError);
+                alert('Failed to upload cover image. Please try again.');
+                submitTaleButton.disabled = false;
+                submitTaleButton.textContent = 'Post Tale';
+                return;
+            }
+
+            const { data: urlData } = supabaseClient.storage.from('tale-images').getPublicUrl(fileName);
+            taleData.cover_image_url = urlData.publicUrl;
+        }
+
         taleData.user_id = user.id;
-        const { error } = await supabaseClient.from('tales').insert([taleData]);
-        if (error) {
-            console.error('Error posting tale:', error);
+        delete taleData.cover_image;
+
+        const { error: insertError } = await supabaseClient.from('tales').insert([taleData]);
+
+        if (insertError) {
+            console.error('Error posting tale:', insertError);
             alert('Sorry, there was an error posting your tale.');
         } else {
             addTaleModal.classList.add('hidden');
             taleForm.reset();
+            quill.setText('');
             await loadTales();
         }
+        
         submitTaleButton.disabled = false;
         submitTaleButton.textContent = 'Post Tale';
     });
