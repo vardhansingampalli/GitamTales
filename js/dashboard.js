@@ -64,8 +64,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { data: tales, error } = await supabaseClient
             .from('tales')
             .select(`*, profiles ( full_name, avatar_url )`)
+            .eq('user_id', user.id) // <-- THIS IS THE FIX: Only get tales where user_id matches the logged-in user's ID
             .order('created_at', { ascending: false });
-
         if (error) {
             console.error('Error fetching tales:', error);
             return;
