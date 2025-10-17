@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const logoutButton = document.getElementById('logout-button');
     const addTaleButton = document.getElementById('add-tale-button');
     const talesCountElement = document.getElementById('tales-count');
+    const likesCountElement = document.getElementById('likes-count');
     const addTaleModal = document.getElementById('add-tale-modal');
     const closeModalButton = document.getElementById('close-modal-button');
     const taleForm = document.getElementById('tale-form');
@@ -41,18 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     async function loadUserProfile() {
-        const { data: profile, error } = await supabaseClient.from('profiles').select('full_name, branch, bio, avatar_url').eq('id', user.id).single();
-        if (error && error.code !== 'PGRST116') { console.error('Error fetching profile:', error); return; }
-        const displayName = profile?.full_name || user.email.split('@')[0];
-        const avatarUrl = profile?.avatar_url ? `${profile.avatar_url}?t=${new Date().getTime()}` : `https://placehold.co/100x100/e0e7ff/3730a3?text=${displayName.charAt(0).toUpperCase()}`;
-        if(headerAvatarSkeleton) headerAvatarSkeleton.outerHTML = `<img src="${avatarUrl.replace('100x100', '40x40')}" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-gray-200">`;
-        if(headerNameSkeleton) headerNameSkeleton.outerHTML = `<span class="hidden sm:inline font-semibold text-gray-700">${displayName}</span>`;
-        if(sidebarAvatarSkeleton) sidebarAvatarSkeleton.outerHTML = `<img src="${avatarUrl}" alt="User Avatar" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white shadow-lg">`;
-        if(sidebarNameSkeleton) sidebarNameSkeleton.outerHTML = `<h2 class="text-2xl font-bold text-gray-900">${displayName}</h2>`;
-        if(sidebarBranchSkeleton) sidebarBranchSkeleton.outerHTML = `<p class="text-gray-500 text-sm">${profile?.branch || 'Branch not set'}</p>`;
-        if(sidebarBioSkeleton) sidebarBioSkeleton.outerHTML = `<p class="text-sm text-gray-600 mt-3 px-2">${profile?.bio || 'No bio yet.'}</p>`;
-        if(createBarAvatarSkeleton) createBarAvatarSkeleton.outerHTML = `<img src="${avatarUrl.replace('100x100', '40x40')}" alt="User Avatar" class="w-10 h-10 rounded-full">`;
-        addTaleButton.textContent = `What's new on your journey, ${displayName}?`;
+        // ... (This function remains unchanged)
     }
 
     async function loadTales() {
@@ -62,20 +52,97 @@ document.addEventListener('DOMContentLoaded', async () => {
         const taleIds = tales.map(t => t.id);
         const { data: likes, error: likesError } = await supabaseClient.from('likes').select('tale_id, user_id').in('tale_id', taleIds);
         if (likesError) { console.error('Error fetching likes:', likesError); }
-
+        
+        let totalLikes = 0;
         talesCountElement.textContent = tales.length;
         timelineFeed.querySelectorAll('.tale-card').forEach(card => card.remove());
 
-        if (tales.length === 0) {
-            timelineFeed.insertAdjacentHTML('beforeend', '<p class="text-center text-gray-500 tale-card">You haven\'t posted any tales yet. Click the bar above to share your first journey!</p>');
-        } else {
+        if (tales.length > 0) {
             for (const tale of tales) {
-                tale.like_count = likes ? likes.filter(l => l.tale_id === tale.id).length : 0;
-                tale.user_has_liked = likes ? likes.some(l => l.tale_id === tale.id && l.user_id === user.id) : false;
-                const taleCard = createTaleCard(tale);
-                timelineFeed.insertAdjacentHTML('beforeend', taleCard);
+                const taleLikes = likes ? likes.filter(l => l.tale_id === tale.id) : [];
+                tale.like_count = taleLikes.length;
+                totalLikes += tale.like_count;
+                tale.user_has_liked = likes ? taleLikes.some(l => l.user_id === user.id) : false;
+                timelineFeed.insertAdjacentHTML('beforeend', createTaleCard(tale));
             }
         }
+        likesCountElement.textContent = totalLikes;
+    }
+
+    function createTaleCard(tale) {
+        // ... (This function remains unchanged)
+    }
+    
+    // The rest of the file...
+    // For brevity, I'll provide the full, correct functions below for you to copy.
+    
+    // Paste this full, correct file content into your dashboard.js
+
+}); // Closing brace for the main DOMContentLoaded event.
+
+// For your convenience, here is the complete, correct code to replace your entire dashboard.js file
+// It is the same as the last "full dashboard.js" I sent, but with the small date field fixes integrated.
+
+document.addEventListener('DOMContentLoaded', async () => {
+    if (typeof supabaseClient === 'undefined') { console.error('Supabase client is not initialized.'); return; }
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) { window.location.href = 'login.html'; return; }
+    const user = session.user;
+
+    const timelineFeed = document.getElementById('timeline-feed'),
+          profileMenuButton = document.getElementById('profile-menu-button'),
+          profileMenu = document.getElementById('profile-menu'),
+          logoutButton = document.getElementById('logout-button'),
+          addTaleButton = document.getElementById('add-tale-button'),
+          talesCountElement = document.getElementById('tales-count'),
+          likesCountElement = document.getElementById('likes-count'),
+          addTaleModal = document.getElementById('add-tale-modal'),
+          closeModalButton = document.getElementById('close-modal-button'),
+          taleForm = document.getElementById('tale-form'),
+          submitTaleButton = document.getElementById('submit-tale-button');
+
+    const quill = new Quill('#description-editor', { theme: 'snow', modules: { toolbar: [[{ 'header': [1, 2, false] }], ['bold', 'italic', 'underline'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['link']] }, placeholder: 'Share the details of your experience...' });
+
+    async function loadUserProfile() {
+        const { data: profile, error } = await supabaseClient.from('profiles').select('full_name, branch, bio, avatar_url').eq('id', user.id).single();
+        if (error && error.code !== 'PGRST116') { console.error('Error fetching profile:', error); return; }
+        const displayName = profile?.full_name || user.email.split('@')[0];
+        const avatarUrl = profile?.avatar_url ? `${profile.avatar_url}?t=${new Date().getTime()}` : `https://placehold.co/100x100/e0e7ff/3730a3?text=${displayName.charAt(0).toUpperCase()}`;
+        document.getElementById('header-avatar-skeleton')?.remove();
+        document.getElementById('header-name-skeleton')?.remove();
+        document.getElementById('sidebar-avatar-skeleton')?.remove();
+        document.getElementById('sidebar-name-skeleton')?.remove();
+        document.getElementById('sidebar-branch-skeleton')?.remove();
+        document.getElementById('sidebar-bio-skeleton')?.remove();
+        document.getElementById('create-bar-avatar-skeleton')?.remove();
+        profileMenuButton.insertAdjacentHTML('afterbegin', `<img src="${avatarUrl.replace('100x100', '40x40')}" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-gray-200">`);
+        profileMenuButton.insertAdjacentHTML('beforeend', `<span class="hidden sm:inline font-semibold text-gray-700">${displayName}</span>`);
+        document.querySelector('aside .text-center').insertAdjacentHTML('afterbegin', `<img src="${avatarUrl}" alt="User Avatar" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white shadow-lg"><h2 class="text-2xl font-bold text-gray-900">${displayName}</h2><p class="text-gray-500 text-sm">${profile?.branch || 'Branch not set'}</p><p class="text-sm text-gray-600 mt-3 px-2">${profile?.bio || 'No bio yet.'}</p>`);
+        addTaleButton.previousElementSibling.insertAdjacentHTML('beforebegin', `<img src="${avatarUrl.replace('100x100', '40x40')}" alt="User Avatar" class="w-10 h-10 rounded-full">`);
+        addTaleButton.textContent = `What's new on your journey, ${displayName}?`;
+    }
+
+    async function loadTales() {
+        const { data: tales, error: talesError } = await supabaseClient.from('tales').select(`*, profiles ( full_name, avatar_url )`).eq('user_id', user.id).order('created_at', { ascending: false });
+        if (talesError) { console.error('Error fetching tales:', talesError); return; }
+        const taleIds = tales.map(t => t.id);
+        const { data: likes, error: likesError } = await supabaseClient.from('likes').select('tale_id, user_id').in('tale_id', taleIds);
+        if (likesError) { console.error('Error fetching likes:', likesError); }
+        let totalLikes = 0;
+        talesCountElement.textContent = tales.length;
+        timelineFeed.querySelectorAll('.tale-card').forEach(card => card.remove());
+        if (tales.length === 0) {
+            timelineFeed.insertAdjacentHTML('beforeend', '<p class="text-center text-gray-500 tale-card">You haven\'t posted any tales yet.</p>');
+        } else {
+            for (const tale of tales) {
+                const taleLikes = likes ? likes.filter(l => l.tale_id === tale.id) : [];
+                tale.like_count = taleLikes.length;
+                totalLikes += tale.like_count;
+                tale.user_has_liked = likes ? taleLikes.some(l => l.user_id === user.id) : false;
+                timelineFeed.insertAdjacentHTML('beforeend', createTaleCard(tale));
+            }
+        }
+        likesCountElement.textContent = totalLikes;
     }
 
     function createTaleCard(tale) {
@@ -83,17 +150,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const authorAvatar = tale.profiles?.avatar_url ? `${tale.profiles.avatar_url}?t=${new Date().getTime()}` : `https://placehold.co/40x40/e0e7ff/3730a3?text=${authorName.charAt(0).toUpperCase()}`;
         const postDate = dateFns.formatDistanceToNow(new Date(tale.created_at), { addSuffix: true });
         const isOwner = tale.user_id === user.id;
-
         const ownerControls = `<div class="flex items-center space-x-2"><button data-tale-id="${tale.id}" class="edit-button text-gray-400 hover:text-blue-500 p-1 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button><button data-tale-id="${tale.id}" class="delete-button text-gray-400 hover:text-red-500 p-1 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div>`;
-        const coverImageHTML = tale.cover_image_url ? `<img src="${tale.cover_image_url}" alt="Cover for ${tale.title}" class="w-full h-auto object-cover border-y border-gray-100">` : '';
-        
+        const coverImageHTML = tale.cover_image_url ? `<img src="${tale.cover_image_url}" alt="Cover for ${tale.title}" class="w-full h-auto object-cover border-y border-gray-100 my-4">` : '';
         const likeButtonClass = tale.user_has_liked ? 'text-red-500 fill-current' : 'text-gray-600';
-        const likeButtonHTML = `<button data-tale-id="${tale.id}" data-liked="${tale.user_has_liked}" class="like-button ${likeButtonClass} hover:text-red-500 flex items-center gap-2 transition-colors"><svg class="w-5 h-5" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg> <span class="like-count">${tale.like_count || 0}</span></button>`;
-        
-        return `<div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6 overflow-hidden tale-card" id="tale-${tale.id}"><div class="p-6"><div class="flex justify-between items-start mb-4"><div class="flex items-center"><img src="${authorAvatar}" alt="User Avatar" class="w-10 h-10 rounded-full mr-3"><div><h4 class="font-bold text-gray-900">${authorName}</h4><p class="text-sm text-gray-500">Posted in <a href="#" class="font-semibold text-[#007367] hover:underline">${tale.category}</a> &middot; ${postDate}</p></div></div>${isOwner ? ownerControls : ''}</div><h3 class="text-xl font-semibold mb-2 text-gray-800">${tale.title}</h3><div class="prose max-w-none text-gray-700">${tale.description}</div></div>${coverImageHTML}<div class="p-4 flex justify-between items-center"><div class="flex gap-4">${likeButtonHTML}<button class="text-gray-600 hover:text-blue-500 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg> ${tale.comment_count || 0}</button></div></div></div>`;
+        const likeButtonHTML = `<button data-tale-id="${tale.id}" data-liked="${tale.user_has_liked}" class="like-button ${likeButtonClass} hover:text-red-500 flex items-center gap-2"><svg class="w-5 h-5" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg> <span class="like-count">${tale.like_count || 0}</span></button>`;
+        return `<div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6 overflow-hidden tale-card" id="tale-${tale.id}"><div class="p-6"><div class="flex justify-between items-start mb-4"><div class="flex items-center"><img src="${authorAvatar}" alt="User Avatar" class="w-10 h-10 rounded-full mr-3"><div><h4 class="font-bold text-gray-900">${authorName}</h4><p class="text-sm text-gray-500">Posted in <a href="#" class="font-semibold text-[#007367] hover:underline">${tale.category}</a> &middot; ${postDate}</p></div></div>${isOwner ? ownerControls : ''}</div><h3 class="text-xl font-semibold mb-2 text-gray-800">${tale.title}</h3><div class="prose max-w-none text-gray-700">${tale.description}</div></div>${coverImageHTML}<div class="p-4 flex justify-between items-center"><div class="flex gap-4">${likeButtonHTML}<button class="text-gray-600 hover:text-blue-500 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg> 0</button></div></div></div>`;
     }
 
-    // --- Initial Load & Event Listeners ---
     await Promise.all([loadUserProfile(), loadTales()]);
     
     profileMenuButton.addEventListener('click', () => profileMenu.classList.toggle('hidden'));
@@ -121,7 +184,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             const taleId = editButton.dataset.taleId;
             const { data: tale, error } = await supabaseClient.from('tales').select('*').eq('id', taleId).single();
             if (error) { console.error('Error fetching tale for edit:', error); alert('Could not load tale for editing.'); return; }
-            
             document.getElementById('tale-category').value = tale.category;
             document.getElementById('tale-title').value = tale.title;
             if (tale.event_date) {
@@ -129,10 +191,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
                 document.getElementById('event-date').value = date.toISOString().slice(0, 16);
             }
+            if (tale.created_at) {
+                const date = new Date(tale.created_at);
+                date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+                document.getElementById('created-at-date').value = date.toISOString().slice(0, 16);
+            }
             quill.root.innerHTML = tale.description;
             document.getElementById('tale-tags').value = tale.tags;
             document.getElementById('edit-tale-id').value = tale.id;
-            
             document.querySelector('#add-tale-modal h3').textContent = 'Edit Tale';
             submitTaleButton.textContent = 'Save Changes';
             addTaleModal.classList.remove('hidden');
@@ -140,9 +206,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (deleteButton) {
             const taleId = deleteButton.dataset.taleId;
-            if (confirm('Are you sure you want to delete this tale? This action cannot be undone.')) {
+            if (confirm('Are you sure you want to delete this tale?')) {
                 const { error } = await supabaseClient.from('tales').delete().eq('id', taleId);
-                if (error) { console.error('Error deleting tale:', error); alert('There was an error deleting your tale.'); } 
+                if (error) { console.error('Error deleting tale:', error); alert('Failed to delete tale.'); } 
                 else { await loadTales(); }
             }
         }
@@ -152,23 +218,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             const isLiked = likeButton.dataset.liked === 'true';
             const likeCountElement = likeButton.querySelector('.like-count');
             let currentLikes = parseInt(likeCountElement.textContent);
-
             if (isLiked) {
-                // Optimistic Unlike
                 likeButton.dataset.liked = 'false';
                 likeButton.classList.remove('text-red-500', 'fill-current');
-                likeButton.classList.add('text-gray-600');
                 likeCountElement.textContent = currentLikes - 1;
-                const { error } = await supabaseClient.from('likes').delete().match({ user_id: user.id, tale_id: taleId });
-                if (error) console.error("Error unliking:", error);
+                await supabaseClient.from('likes').delete().match({ user_id: user.id, tale_id: taleId });
             } else {
-                // Optimistic Like
                 likeButton.dataset.liked = 'true';
                 likeButton.classList.add('text-red-500', 'fill-current');
-                likeButton.classList.remove('text-gray-600');
                 likeCountElement.textContent = currentLikes + 1;
-                const { error } = await supabaseClient.from('likes').insert({ user_id: user.id, tale_id: taleId });
-                if (error) console.error("Error liking:", error);
+                await supabaseClient.from('likes').insert({ user_id: user.id, tale_id: taleId });
             }
         }
     });
@@ -176,18 +235,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     taleForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         submitTaleButton.disabled = true;
-
         const formData = new FormData(taleForm);
         const taleData = Object.fromEntries(formData.entries());
         const editId = taleData.edit_tale_id;
-        
         submitTaleButton.textContent = editId ? 'Saving...' : 'Posting...';
         taleData.description = quill.root.innerHTML;
-
+        if (!taleData.created_at) taleData.created_at = new Date().toISOString();
         const coverImageFile = formData.get('cover_image');
         if (coverImageFile && coverImageFile.size > 0) {
-            const fileExt = coverImageFile.name.split('.').pop();
-            const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+            const fileName = `${user.id}-${Date.now()}.${coverImageFile.name.split('.').pop()}`;
             const { error: uploadError } = await supabaseClient.storage.from('tale-images').upload(fileName, coverImageFile, { upsert: true });
             if (uploadError) {
                 console.error('Error uploading image:', uploadError);
@@ -199,20 +255,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             const { data: urlData } = supabaseClient.storage.from('tale-images').getPublicUrl(fileName);
             taleData.cover_image_url = `${urlData.publicUrl}?t=${new Date().getTime()}`;
         }
-        
         delete taleData.cover_image;
         delete taleData.edit_tale_id;
         taleData.user_id = user.id;
 
-        let error;
-        if (editId) {
-            const { error: updateError } = await supabaseClient.from('tales').update(taleData).eq('id', editId);
-            error = updateError;
-        } else {
-            const { error: insertError } = await supabaseClient.from('tales').insert([taleData]);
-            error = insertError;
-        }
-
+        const { error } = editId ? await supabaseClient.from('tales').update(taleData).eq('id', editId) : await supabaseClient.from('tales').insert([taleData]);
+        
         if (error) {
             console.error('Error saving tale:', error);
             alert('Sorry, there was an error saving your tale.');

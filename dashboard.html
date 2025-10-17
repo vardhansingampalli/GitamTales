@@ -94,7 +94,13 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label for="tale-category" class="block text-sm font-medium text-gray-700">Category</label>
-                        <select id="tale-category" name="category" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg"></select>
+                        <select id="tale-category" name="category" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg">
+                            <option>Projects</option>
+                            <option>Academics</option>
+                            <option>Achievements</option>
+                            <option>Leadership & Events</option>
+                            <option>Research & Papers</option>
+                        </select>
                     </div>
                     <div>
                         <label for="tale-title" class="block text-sm font-medium text-gray-700">Title</label>
@@ -103,13 +109,17 @@
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label for="event-date" class="block text-sm font-medium text-gray-700">Date & Time of Event</label>
+                        <label for="event-date" class="block text-sm font-medium text-gray-700">Date of Event</label>
                         <input type="datetime-local" id="event-date" name="event_date" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg">
                     </div>
                     <div>
-                        <label for="cover-image" class="block text-sm font-medium text-gray-700">Cover Image</label>
-                        <input type="file" id="cover-image" name="cover_image" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                        <label for="created-at-date" class="block text-sm font-medium text-gray-700">Post Upload Date</label>
+                        <input type="datetime-local" id="created-at-date" name="created_at" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg">
                     </div>
+                </div>
+                <div class="mt-6">
+                    <label for="cover-image" class="block text-sm font-medium text-gray-700">Cover Image</label>
+                    <input type="file" id="cover-image" name="cover_image" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100" accept="image/png, image/jpeg, image/gif">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Description</label>
