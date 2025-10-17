@@ -46,17 +46,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         const avatarUrl = profile?.avatar_url ? `${profile.avatar_url}?t=${new Date().getTime()}` : `https://placehold.co/100x100/e0e7ff/3730a3?text=${displayName.charAt(0).toUpperCase()}`;
         
         // Replace Header Skeletons
-        headerAvatarSkeleton.outerHTML = `<img src="${avatarUrl.replace('100x100', '40x40')}" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-gray-200">`;
-        headerNameSkeleton.outerHTML = `<span class="hidden sm:inline font-semibold text-gray-700">${displayName}</span>`;
+        if(headerAvatarSkeleton) headerAvatarSkeleton.outerHTML = `<img src="${avatarUrl.replace('100x100', '40x40')}" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-gray-200">`;
+        if(headerNameSkeleton) headerNameSkeleton.outerHTML = `<span class="hidden sm:inline font-semibold text-gray-700">${displayName}</span>`;
 
         // Replace Sidebar Skeletons
-        sidebarAvatarSkeleton.outerHTML = `<img src="${avatarUrl}" alt="User Avatar" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white shadow-lg">`;
-        sidebarNameSkeleton.outerHTML = `<h2 class="text-2xl font-bold text-gray-900">${displayName}</h2>`;
-        sidebarBranchSkeleton.outerHTML = `<p class="text-gray-500 text-sm">${profile?.branch || 'Branch not set'}</p>`;
-        sidebarBioSkeleton.outerHTML = `<p class="text-sm text-gray-600 mt-3 px-2">${profile?.bio || 'No bio yet.'}</p>`;
+        if(sidebarAvatarSkeleton) sidebarAvatarSkeleton.outerHTML = `<img src="${avatarUrl}" alt="User Avatar" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white shadow-lg">`;
+        if(sidebarNameSkeleton) sidebarNameSkeleton.outerHTML = `<h2 class="text-2xl font-bold text-gray-900">${displayName}</h2>`;
+        if(sidebarBranchSkeleton) sidebarBranchSkeleton.outerHTML = `<p class="text-gray-500 text-sm">${profile?.branch || 'Branch not set'}</p>`;
+        if(sidebarBioSkeleton) sidebarBioSkeleton.outerHTML = `<p class="text-sm text-gray-600 mt-3 px-2">${profile?.bio || 'No bio yet.'}</p>`;
         
         // Update "Create Tale" bar
-        createBarAvatarSkeleton.outerHTML = `<img src="${avatarUrl.replace('100x100', '40x40')}" alt="User Avatar" class="w-10 h-10 rounded-full">`;
+        if(createBarAvatarSkeleton) createBarAvatarSkeleton.outerHTML = `<img src="${avatarUrl.replace('100x100', '40x40')}" alt="User Avatar" class="w-10 h-10 rounded-full">`;
         addTaleButton.textContent = `What's new on your journey, ${displayName}?`;
     }
 
@@ -64,8 +64,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { data: tales, error } = await supabaseClient
             .from('tales')
             .select(`*, profiles ( full_name, avatar_url )`)
-            .eq('user_id', user.id) // <-- THIS IS THE FIX: Only get tales where user_id matches the logged-in user's ID
+            .eq('user_id', user.id) // <-- This is the critical fix
             .order('created_at', { ascending: false });
+
         if (error) {
             console.error('Error fetching tales:', error);
             return;
@@ -77,7 +78,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         existingCards.forEach(card => card.remove());
 
         if (tales.length === 0) {
-            timelineFeed.insertAdjacentHTML('beforeend', '<p class="text-center text-gray-500 tale-card">No tales yet. Be the first to post!</p>');
+            timelineFeed.insertAdjacentHTML('beforeend', '<p class="text-center text-gray-500 tale-card">You haven\'t posted any tales yet. Click the bar above to share your first journey!</p>');
         } else {
             for (const tale of tales) {
                 const taleCard = createTaleCard(tale);
@@ -86,10 +87,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    /**
-     * Creates the HTML for a single tale card.
-     * THIS IS THE CORRECTED, COMPLETE FUNCTION.
-     */
     function createTaleCard(tale) {
         const authorName = tale.profiles?.full_name || 'A Gitamite';
         const authorAvatar = tale.profiles?.avatar_url ? `${tale.profiles.avatar_url}?t=${new Date().getTime()}`: `https://placehold.co/40x40/e0e7ff/3730a3?text=${authorName.charAt(0).toUpperCase()}`;
@@ -117,12 +114,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
         `;
     }
-    
-    // --- The rest of your dashboard.js file ---
-    
+
+    // --- Initial Load & Event Listeners ---
     await Promise.all([loadUserProfile(), loadTales()]);
     
-    // Event listeners
     const addTaleModal = document.getElementById('add-tale-modal');
     const closeModalButton = document.getElementById('close-modal-button');
     const taleForm = document.getElementById('tale-form');
@@ -134,6 +129,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     addTaleButton.addEventListener('click', () => addTaleModal.classList.remove('hidden'));
     closeModalButton.addEventListener('click', () => addTaleModal.classList.add('hidden'));
     addTaleModal.addEventListener('click', (event) => { if (event.target === addTaleModal) { addTaleModal.classList.add('hidden'); } });
+    
     taleForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         submitTaleButton.disabled = true;
