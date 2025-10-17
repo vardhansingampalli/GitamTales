@@ -1,89 +1,4 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    if (typeof supabaseClient === 'undefined') {
-        console.error('Supabase client is not initialized.');
-        return;
-    }
-
-    // --- Auth Guard ---
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session) {
-        window.location.href = 'login.html';
-        return;
-    }
-    const user = session.user;
-
-    // --- Get Page Elements ---
-    const timelineFeed = document.getElementById('timeline-feed');
-    const profileMenuButton = document.getElementById('profile-menu-button');
-    const profileMenu = document.getElementById('profile-menu');
-    const logoutButton = document.getElementById('logout-button');
-    const addTaleButton = document.getElementById('add-tale-button');
-    const talesCountElement = document.getElementById('tales-count');
-    const likesCountElement = document.getElementById('likes-count');
-    const addTaleModal = document.getElementById('add-tale-modal');
-    const closeModalButton = document.getElementById('close-modal-button');
-    const taleForm = document.getElementById('tale-form');
-    const submitTaleButton = document.getElementById('submit-tale-button');
-    
-    // --- Skeleton Elements ---
-    const headerAvatarSkeleton = document.getElementById('header-avatar-skeleton');
-    const headerNameSkeleton = document.getElementById('header-name-skeleton');
-    const sidebarAvatarSkeleton = document.getElementById('sidebar-avatar-skeleton');
-    const sidebarNameSkeleton = document.getElementById('sidebar-name-skeleton');
-    const sidebarBranchSkeleton = document.getElementById('sidebar-branch-skeleton');
-    const sidebarBioSkeleton = document.getElementById('sidebar-bio-skeleton');
-    const createBarAvatarSkeleton = document.getElementById('create-bar-avatar-skeleton');
-
-    // --- Initialize Quill Rich Text Editor ---
-    const quill = new Quill('#description-editor', {
-        theme: 'snow',
-        modules: { toolbar: [[{ 'header': [1, 2, false] }], ['bold', 'italic', 'underline'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['link']] },
-        placeholder: 'Share the details of your experience...'
-    });
-
-    async function loadUserProfile() {
-        // ... (This function remains unchanged)
-    }
-
-    async function loadTales() {
-        const { data: tales, error: talesError } = await supabaseClient.from('tales').select(`*, profiles ( full_name, avatar_url )`).eq('user_id', user.id).order('created_at', { ascending: false });
-        if (talesError) { console.error('Error fetching tales:', talesError); return; }
-
-        const taleIds = tales.map(t => t.id);
-        const { data: likes, error: likesError } = await supabaseClient.from('likes').select('tale_id, user_id').in('tale_id', taleIds);
-        if (likesError) { console.error('Error fetching likes:', likesError); }
-        
-        let totalLikes = 0;
-        talesCountElement.textContent = tales.length;
-        timelineFeed.querySelectorAll('.tale-card').forEach(card => card.remove());
-
-        if (tales.length > 0) {
-            for (const tale of tales) {
-                const taleLikes = likes ? likes.filter(l => l.tale_id === tale.id) : [];
-                tale.like_count = taleLikes.length;
-                totalLikes += tale.like_count;
-                tale.user_has_liked = likes ? taleLikes.some(l => l.user_id === user.id) : false;
-                timelineFeed.insertAdjacentHTML('beforeend', createTaleCard(tale));
-            }
-        }
-        likesCountElement.textContent = totalLikes;
-    }
-
-    function createTaleCard(tale) {
-        // ... (This function remains unchanged)
-    }
-    
-    // The rest of the file...
-    // For brevity, I'll provide the full, correct functions below for you to copy.
-    
-    // Paste this full, correct file content into your dashboard.js
-
-}); // Closing brace for the main DOMContentLoaded event.
-
-// For your convenience, here is the complete, correct code to replace your entire dashboard.js file
-// It is the same as the last "full dashboard.js" I sent, but with the small date field fixes integrated.
-
-document.addEventListener('DOMContentLoaded', async () => {
     if (typeof supabaseClient === 'undefined') { console.error('Supabase client is not initialized.'); return; }
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) { window.location.href = 'login.html'; return; }
@@ -108,17 +23,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (error && error.code !== 'PGRST116') { console.error('Error fetching profile:', error); return; }
         const displayName = profile?.full_name || user.email.split('@')[0];
         const avatarUrl = profile?.avatar_url ? `${profile.avatar_url}?t=${new Date().getTime()}` : `https://placehold.co/100x100/e0e7ff/3730a3?text=${displayName.charAt(0).toUpperCase()}`;
-        document.getElementById('header-avatar-skeleton')?.remove();
-        document.getElementById('header-name-skeleton')?.remove();
-        document.getElementById('sidebar-avatar-skeleton')?.remove();
-        document.getElementById('sidebar-name-skeleton')?.remove();
-        document.getElementById('sidebar-branch-skeleton')?.remove();
-        document.getElementById('sidebar-bio-skeleton')?.remove();
-        document.getElementById('create-bar-avatar-skeleton')?.remove();
-        profileMenuButton.insertAdjacentHTML('afterbegin', `<img src="${avatarUrl.replace('100x100', '40x40')}" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-gray-200">`);
-        profileMenuButton.insertAdjacentHTML('beforeend', `<span class="hidden sm:inline font-semibold text-gray-700">${displayName}</span>`);
-        document.querySelector('aside .text-center').insertAdjacentHTML('afterbegin', `<img src="${avatarUrl}" alt="User Avatar" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white shadow-lg"><h2 class="text-2xl font-bold text-gray-900">${displayName}</h2><p class="text-gray-500 text-sm">${profile?.branch || 'Branch not set'}</p><p class="text-sm text-gray-600 mt-3 px-2">${profile?.bio || 'No bio yet.'}</p>`);
-        addTaleButton.previousElementSibling.insertAdjacentHTML('beforebegin', `<img src="${avatarUrl.replace('100x100', '40x40')}" alt="User Avatar" class="w-10 h-10 rounded-full">`);
+        
+        const headerAvatar = profileMenuButton.querySelector('img') || document.getElementById('header-avatar-skeleton');
+        const headerName = profileMenuButton.querySelector('span') || document.getElementById('header-name-skeleton');
+        if(headerAvatar) headerAvatar.src = avatarUrl.replace('100x100', '40x40');
+        if(headerName) headerName.textContent = displayName;
+
+        const sidebar = document.querySelector('aside');
+        if (sidebar) {
+            const sidebarAvatar = sidebar.querySelector('img');
+            const sidebarName = sidebar.querySelector('h2');
+            const sidebarBranch = sidebar.querySelector('p.text-gray-500');
+            const sidebarBio = sidebar.querySelector('p.text-gray-600');
+            if(sidebarAvatar) sidebarAvatar.src = avatarUrl;
+            if(sidebarName) sidebarName.textContent = displayName;
+            if(sidebarBranch) sidebarBranch.textContent = profile?.branch || 'Branch not set';
+            if(sidebarBio) sidebarBio.textContent = profile?.bio || 'No bio yet.';
+        }
+        
+        const createBarAvatar = addTaleButton.previousElementSibling;
+        if(createBarAvatar && createBarAvatar.tagName === 'IMG') createBarAvatar.src = avatarUrl.replace('100x100', '40x40');
+        
         addTaleButton.textContent = `What's new on your journey, ${displayName}?`;
     }
 
@@ -129,7 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { data: likes, error: likesError } = await supabaseClient.from('likes').select('tale_id, user_id').in('tale_id', taleIds);
         if (likesError) { console.error('Error fetching likes:', likesError); }
         let totalLikes = 0;
-        talesCountElement.textContent = tales.length;
+        if(talesCountElement) talesCountElement.textContent = tales.length;
         timelineFeed.querySelectorAll('.tale-card').forEach(card => card.remove());
         if (tales.length === 0) {
             timelineFeed.insertAdjacentHTML('beforeend', '<p class="text-center text-gray-500 tale-card">You haven\'t posted any tales yet.</p>');
@@ -142,10 +67,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 timelineFeed.insertAdjacentHTML('beforeend', createTaleCard(tale));
             }
         }
-        likesCountElement.textContent = totalLikes;
+        if(likesCountElement) likesCountElement.textContent = totalLikes;
     }
 
     function createTaleCard(tale) {
+        // ... (This function remains unchanged)
         const authorName = tale.profiles?.full_name || 'A Gitamite';
         const authorAvatar = tale.profiles?.avatar_url ? `${tale.profiles.avatar_url}?t=${new Date().getTime()}` : `https://placehold.co/40x40/e0e7ff/3730a3?text=${authorName.charAt(0).toUpperCase()}`;
         const postDate = dateFns.formatDistanceToNow(new Date(tale.created_at), { addSuffix: true });
@@ -158,44 +84,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     await Promise.all([loadUserProfile(), loadTales()]);
-    
+    // ... (The rest of the event listeners remain unchanged)
     profileMenuButton.addEventListener('click', () => profileMenu.classList.toggle('hidden'));
     document.addEventListener('click', (event) => { if (profileMenu && !profileMenuButton.contains(event.target) && !profileMenu.contains(event.target)) { profileMenu.classList.add('hidden'); } });
     logoutButton.addEventListener('click', async (e) => { e.preventDefault(); await supabaseClient.auth.signOut(); window.location.href = 'index.html'; });
-    
-    addTaleButton.addEventListener('click', () => {
-        taleForm.reset();
-        quill.setText('');
-        document.querySelector('#add-tale-modal h3').textContent = 'Create a New Tale';
-        submitTaleButton.textContent = 'Post Tale';
-        document.getElementById('edit-tale-id').value = '';
-        addTaleModal.classList.remove('hidden');
-    });
-
+    addTaleButton.addEventListener('click', () => { taleForm.reset(); quill.setText(''); document.querySelector('#add-tale-modal h3').textContent = 'Create a New Tale'; submitTaleButton.textContent = 'Post Tale'; document.getElementById('edit-tale-id').value = ''; addTaleModal.classList.remove('hidden'); });
     closeModalButton.addEventListener('click', () => addTaleModal.classList.add('hidden'));
     addTaleModal.addEventListener('click', (event) => { if (event.target === addTaleModal) { addTaleModal.classList.add('hidden'); } });
-    
     timelineFeed.addEventListener('click', async (event) => {
         const editButton = event.target.closest('.edit-button');
         const deleteButton = event.target.closest('.delete-button');
         const likeButton = event.target.closest('.like-button');
-
         if (editButton) {
             const taleId = editButton.dataset.taleId;
             const { data: tale, error } = await supabaseClient.from('tales').select('*').eq('id', taleId).single();
             if (error) { console.error('Error fetching tale for edit:', error); alert('Could not load tale for editing.'); return; }
             document.getElementById('tale-category').value = tale.category;
             document.getElementById('tale-title').value = tale.title;
-            if (tale.event_date) {
-                const date = new Date(tale.event_date);
-                date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-                document.getElementById('event-date').value = date.toISOString().slice(0, 16);
-            }
-            if (tale.created_at) {
-                const date = new Date(tale.created_at);
-                date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-                document.getElementById('created-at-date').value = date.toISOString().slice(0, 16);
-            }
+            if (tale.event_date) { const date = new Date(tale.event_date); date.setMinutes(date.getMinutes() - date.getTimezoneOffset()); document.getElementById('event-date').value = date.toISOString().slice(0, 16); }
+            if (tale.created_at) { const date = new Date(tale.created_at); date.setMinutes(date.getMinutes() - date.getTimezoneOffset()); document.getElementById('created-at-date').value = date.toISOString().slice(0, 16); }
             quill.root.innerHTML = tale.description;
             document.getElementById('tale-tags').value = tale.tags;
             document.getElementById('edit-tale-id').value = tale.id;
@@ -203,7 +110,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             submitTaleButton.textContent = 'Save Changes';
             addTaleModal.classList.remove('hidden');
         }
-
         if (deleteButton) {
             const taleId = deleteButton.dataset.taleId;
             if (confirm('Are you sure you want to delete this tale?')) {
@@ -212,7 +118,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 else { await loadTales(); }
             }
         }
-
         if (likeButton) {
             const taleId = likeButton.dataset.taleId;
             const isLiked = likeButton.dataset.liked === 'true';
@@ -231,7 +136,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
     });
-    
     taleForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         submitTaleButton.disabled = true;
