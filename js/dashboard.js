@@ -45,17 +45,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const displayName = profile?.full_name || user.email.split('@')[0];
         const avatarUrl = profile?.avatar_url ? `${profile.avatar_url}?t=${new Date().getTime()}` : `https://placehold.co/100x100/e0e7ff/3730a3?text=${displayName.charAt(0).toUpperCase()}`;
         
-        // Replace Header Skeletons
         if(headerAvatarSkeleton) headerAvatarSkeleton.outerHTML = `<img src="${avatarUrl.replace('100x100', '40x40')}" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-gray-200">`;
         if(headerNameSkeleton) headerNameSkeleton.outerHTML = `<span class="hidden sm:inline font-semibold text-gray-700">${displayName}</span>`;
-
-        // Replace Sidebar Skeletons
         if(sidebarAvatarSkeleton) sidebarAvatarSkeleton.outerHTML = `<img src="${avatarUrl}" alt="User Avatar" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white shadow-lg">`;
         if(sidebarNameSkeleton) sidebarNameSkeleton.outerHTML = `<h2 class="text-2xl font-bold text-gray-900">${displayName}</h2>`;
         if(sidebarBranchSkeleton) sidebarBranchSkeleton.outerHTML = `<p class="text-gray-500 text-sm">${profile?.branch || 'Branch not set'}</p>`;
         if(sidebarBioSkeleton) sidebarBioSkeleton.outerHTML = `<p class="text-sm text-gray-600 mt-3 px-2">${profile?.bio || 'No bio yet.'}</p>`;
-        
-        // Update "Create Tale" bar
         if(createBarAvatarSkeleton) createBarAvatarSkeleton.outerHTML = `<img src="${avatarUrl.replace('100x100', '40x40')}" alt="User Avatar" class="w-10 h-10 rounded-full">`;
         addTaleButton.textContent = `What's new on your journey, ${displayName}?`;
     }
@@ -64,7 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { data: tales, error } = await supabaseClient
             .from('tales')
             .select(`*, profiles ( full_name, avatar_url )`)
-            .eq('user_id', user.id) // <-- This is the critical fix
+            .eq('user_id', user.id)
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -73,9 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         talesCountElement.textContent = tales.length;
-
-        const existingCards = timelineFeed.querySelectorAll('.tale-card');
-        existingCards.forEach(card => card.remove());
+        timelineFeed.querySelectorAll('.tale-card').forEach(card => card.remove());
 
         if (tales.length === 0) {
             timelineFeed.insertAdjacentHTML('beforeend', '<p class="text-center text-gray-500 tale-card">You haven\'t posted any tales yet. Click the bar above to share your first journey!</p>');
@@ -91,16 +84,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         const authorName = tale.profiles?.full_name || 'A Gitamite';
         const authorAvatar = tale.profiles?.avatar_url ? `${tale.profiles.avatar_url}?t=${new Date().getTime()}`: `https://placehold.co/40x40/e0e7ff/3730a3?text=${authorName.charAt(0).toUpperCase()}`;
         const postDate = new Date(tale.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        
+        const isOwner = tale.user_id === user.id;
+        const ownerControls = `
+            <div class="relative dropdown">
+                <button class="dropdown-button text-gray-500 hover:text-gray-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
+                </button>
+                <div class="dropdown-menu hidden absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-100">
+                    <button data-tale-id="${tale.id}" class="delete-button w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Delete</button>
+                </div>
+            </div>
+        `;
 
         return `
-            <div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6 overflow-hidden tale-card">
+            <div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6 overflow-hidden tale-card" id="tale-${tale.id}">
                 <div class="p-6">
-                    <div class="flex items-center mb-4">
-                        <img src="${authorAvatar}" alt="User Avatar" class="w-10 h-10 rounded-full mr-3">
-                        <div>
-                            <h4 class="font-bold text-gray-900">${authorName}</h4>
-                            <p class="text-sm text-gray-500">Posted in <a href="#" class="font-semibold text-[#007367] hover:underline">${tale.category}</a> &middot; ${postDate}</p>
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex items-center">
+                            <img src="${authorAvatar}" alt="User Avatar" class="w-10 h-10 rounded-full mr-3">
+                            <div>
+                                <h4 class="font-bold text-gray-900">${authorName}</h4>
+                                <p class="text-sm text-gray-500">Posted in <a href="#" class="font-semibold text-[#007367] hover:underline">${tale.category}</a> &middot; ${postDate}</p>
+                            </div>
                         </div>
+                        ${isOwner ? ownerControls : ''}
                     </div>
                     <h3 class="text-xl font-semibold mb-2 text-gray-800">${tale.title}</h3>
                     <p class="text-gray-700 mb-4">${tale.description}</p>
@@ -118,17 +126,48 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- Initial Load & Event Listeners ---
     await Promise.all([loadUserProfile(), loadTales()]);
     
+    // Event listener setup
     const addTaleModal = document.getElementById('add-tale-modal');
     const closeModalButton = document.getElementById('close-modal-button');
     const taleForm = document.getElementById('tale-form');
     const submitTaleButton = document.getElementById('submit-tale-button');
 
     profileMenuButton.addEventListener('click', () => profileMenu.classList.toggle('hidden'));
-    document.addEventListener('click', (event) => { if (!profileMenuButton.contains(event.target) && !profileMenu.contains(event.target)) { profileMenu.classList.add('hidden'); } });
+    document.addEventListener('click', (event) => { if (profileMenu && !profileMenuButton.contains(event.target) && !profileMenu.contains(event.target)) { profileMenu.classList.add('hidden'); } });
     logoutButton.addEventListener('click', async (e) => { e.preventDefault(); await supabaseClient.auth.signOut(); window.location.href = 'index.html'; });
     addTaleButton.addEventListener('click', () => addTaleModal.classList.remove('hidden'));
     closeModalButton.addEventListener('click', () => addTaleModal.classList.add('hidden'));
     addTaleModal.addEventListener('click', (event) => { if (event.target === addTaleModal) { addTaleModal.classList.add('hidden'); } });
+    
+    // --- EVENT LISTENER FOR DYNAMIC BUTTONS (DROPDOWN AND DELETE) ---
+    timelineFeed.addEventListener('click', async (event) => {
+        const dropdownButton = event.target.closest('.dropdown-button');
+        const deleteButton = event.target.closest('.delete-button');
+
+        // Handle dropdown toggle
+        if (dropdownButton) {
+            const dropdownMenu = dropdownButton.nextElementSibling;
+            if(dropdownMenu) dropdownMenu.classList.toggle('hidden');
+        }
+
+        // Handle delete button click
+        if (deleteButton) {
+            const taleId = deleteButton.dataset.taleId;
+            const isConfirmed = confirm('Are you sure you want to delete this tale? This action cannot be undone.');
+
+            if (isConfirmed) {
+                const { error } = await supabaseClient.from('tales').delete().eq('id', taleId);
+                if (error) {
+                    console.error('Error deleting tale:', error);
+                    alert('There was an error deleting your tale.');
+                } else {
+                    const taleCard = document.getElementById(`tale-${taleId}`);
+                    if (taleCard) taleCard.remove();
+                    await loadTales(); // Refresh the feed and count
+                }
+            }
+        }
+    });
     
     taleForm.addEventListener('submit', async (event) => {
         event.preventDefault();
