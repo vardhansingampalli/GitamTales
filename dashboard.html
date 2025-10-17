@@ -17,14 +17,14 @@
     <header class="bg-white shadow-sm sticky top-0 z-50">
         <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
             <a href="dashboard.html" class="text-2xl font-bold text-[#007367]">GitamTales</a>
-            <div class="flex items-center space-x-4 md:space-x-6"> <a href="index.html#discover" class="text-gray-600 hover:text-[#007367] transition-colors font-medium hidden md:block">
-        Discover
-    </a>
-
-    <div class="hidden md:block">
-        <input type="search" placeholder="Search Tales..." ...>
-    </div>
-    <div class="relative">
+            <div class="flex items-center space-x-4 md:space-x-6">
+                <a href="index.html#discover" class="text-gray-600 hover:text-[#007367] transition-colors font-medium hidden md:block">
+                    Discover
+                </a>
+                <div class="hidden md:block">
+                    <input type="search" placeholder="Search Your Tales..." class="bg-gray-100 border-gray-200 rounded-lg px-4 py-2 text-sm focus:ring-[#007367] focus:border-[#007367]">
+                </div>
+                <div class="relative">
                     <button id="profile-menu-button" class="flex items-center space-x-2">
                         <div id="header-avatar-skeleton" class="w-10 h-10 rounded-full border-2 border-gray-200 bg-gray-300 animate-pulse"></div>
                         <div id="header-name-skeleton" class="h-5 w-20 rounded-md bg-gray-300 animate-pulse hidden sm:inline"></div>
@@ -43,9 +43,9 @@
     <main class="container mx-auto px-6 py-8">
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
 
-            <aside class="lg:col-span-1">
+            <aside class="lg-col-span-1">
                 <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 sticky top-24">
-                    <div id="profile-sidebar-content" class="text-center">
+                    <div class="text-center">
                         <div id="sidebar-avatar-skeleton" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white shadow-lg bg-gray-300 animate-pulse"></div>
                         <div id="sidebar-name-skeleton" class="h-7 w-40 mx-auto rounded-md bg-gray-300 animate-pulse"></div>
                         <div id="sidebar-branch-skeleton" class="h-4 w-24 mx-auto rounded-md bg-gray-300 animate-pulse mt-2"></div>
@@ -70,7 +70,7 @@
                         </div>
                     </div>
                     <hr class="my-6">
-                    <div id="skills-sidebar-content">
+                    <div>
                         <h3 class="font-bold text-gray-800 mb-3 text-sm uppercase tracking-wider">Skills</h3>
                         <div class="flex flex-wrap gap-2">
                             <div class="h-6 w-16 rounded-full bg-gray-300 animate-pulse"></div>
@@ -91,7 +91,42 @@
     </main>
     
     <div id="add-tale-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        ...
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl transform transition-all">
+            <div class="flex justify-between items-center p-4 border-b border-gray-200">
+                <h3 class="text-xl font-bold text-gray-800">Create a New Tale</h3>
+                <button id="close-modal-button" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <form id="tale-form" class="p-6 space-y-4">
+                <div>
+                    <label for="tale-category" class="block text-sm font-medium text-gray-700">Category</label>
+                    <select id="tale-category" name="category" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg focus:ring-[#007367] focus:border-[#007367] transition">
+                        <option>Projects</option>
+                        <option>Academics</option>
+                        <option>Achievements</option>
+                        <option>Leadership & Events</option>
+                        <option>Research & Papers</option>
+                        <option>Reflections</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="tale-title" class="block text-sm font-medium text-gray-700">Title</label>
+                    <input type="text" id="tale-title" name="title" required class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg focus:ring-[#007367] focus:border-[#007367] transition" placeholder="e.g., Developed a Full-Stack App">
+                </div>
+                <div>
+                    <label for="tale-description" class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea id="tale-description" name="description" rows="4" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg focus:ring-[#007367] focus:border-[#007367] transition" placeholder="Share the details of your experience..."></textarea>
+                </div>
+                 <div>
+                    <label for="tale-tags" class="block text-sm font-medium text-gray-700">Tags (comma-separated)</label>
+                    <input type="text" id="tale-tags" name="tags" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg focus:ring-[#007367] focus:border-[#007367] transition" placeholder="e.g., React, Node.js, Leadership">
+                </div>
+            </form>
+            <div class="flex justify-end items-center p-4 bg-gray-50 border-t border-gray-200 rounded-b-xl">
+                <button id="submit-tale-button" type="submit" form="tale-form" class="bg-[#007367] hover:bg-[#005f56] text-white font-bold py-2 px-6 rounded-lg transition-all">Post Tale</button>
+            </div>
+        </div>
     </div>
 
     <script src="js/dashboard.js"></script>
