@@ -8,13 +8,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-client.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/date-fns@3.6.0/cdn.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/date-fns@3.6.0/cdn.min.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-client.js"></script>
 </head>
 <body class="bg-gray-50">
 
@@ -22,13 +21,11 @@
         <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
             <a href="dashboard.html" class="text-2xl font-bold text-[#007367]">GitamTales</a>
             <div class="flex items-center space-x-4 md:space-x-6">
-                
-                <a href="discover.html" class="bg-[#007367] hover:bg-[#005f56] text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition-all text-sm hidden md:block">
+                <a href="discover.html" class="bg-[#007367] hover:bg-[#005f56] text-white font-semibold py-2 px-4 rounded-lg shadow-sm text-sm hidden md:block">
                     Explore Feed
                 </a>
-
                 <div class="hidden md:block">
-                    <input type="search" placeholder="Search Your Tales..." class="bg-gray-100 border-gray-200 rounded-lg px-4 py-2 text-sm focus:ring-[#007367] focus:border-[#007367]">
+                    <input type="search" placeholder="Search Your Tales..." class="bg-gray-100 border-gray-200 rounded-lg px-4 py-2 text-sm">
                 </div>
                 <div class="relative">
                     <button id="profile-menu-button" class="flex items-center space-x-2">
@@ -36,8 +33,8 @@
                         <div id="header-name-skeleton" class="h-5 w-20 rounded-md bg-gray-300 animate-pulse hidden sm:inline"></div>
                     </button>
                     <div id="profile-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20">
-                        <a href="dashboard.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Journey</a>
-                        <a href="settings.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
+                        <a href="dashboard.html" class="block px-4 py-2 text-sm hover:bg-gray-100">My Journey</a>
+                        <a href="settings.html" class="block px-4 py-2 text-sm hover:bg-gray-100">Settings</a>
                         <hr class="my-1">
                         <a href="#" id="logout-button" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Log Out</a>
                     </div>
@@ -48,17 +45,13 @@
 
     <main class="container mx-auto px-6 py-8">
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-
             <aside class="lg:col-span-1">
                 <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 sticky top-24">
                     <div class="text-center">
-                        <div id="sidebar-avatar-skeleton" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white shadow-lg bg-gray-300 animate-pulse"></div>
+                        <div id="sidebar-avatar-skeleton" class="w-24 h-24 rounded-full mx-auto mb-4 bg-gray-300 animate-pulse"></div>
                         <div id="sidebar-name-skeleton" class="h-7 w-40 mx-auto rounded-md bg-gray-300 animate-pulse"></div>
                         <div id="sidebar-branch-skeleton" class="h-4 w-24 mx-auto rounded-md bg-gray-300 animate-pulse mt-2"></div>
-                        <div id="sidebar-bio-skeleton" class="space-y-2 mt-4">
-                            <div class="h-3 w-full rounded-md bg-gray-300 animate-pulse"></div>
-                            <div class="h-3 w-5/6 mx-auto rounded-md bg-gray-300 animate-pulse"></div>
-                        </div>
+                        <div id="sidebar-bio-skeleton" class="space-y-2 mt-4"></div>
                     </div>
                     
                     <div class="flex justify-around text-center my-6">
@@ -70,10 +63,6 @@
                             <p id="likes-count" class="font-bold text-xl text-gray-800">--</p>
                             <p class="text-xs text-gray-500">Likes</p>
                         </div>
-                        <div>
-                            <p id="rank-count" class="font-bold text-xl text-gray-800">#--</p>
-                            <p class="text-xs text-gray-500">Rank</p>
-                        </div>
                     </div>
                     <hr class="my-6">
                     <div>
@@ -81,71 +70,58 @@
                         <div class="flex flex-wrap gap-2">
                             <div class="h-6 w-16 rounded-full bg-gray-300 animate-pulse"></div>
                             <div class="h-6 w-24 rounded-full bg-gray-300 animate-pulse"></div>
-                            <div class="h-6 w-20 rounded-full bg-gray-300 animate-pulse"></div>
                         </div>
                     </div>
                 </div>
             </aside>
-
             <div id="timeline-feed" class="lg:col-span-3">
                  <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200 mb-6 flex items-center gap-4">
                     <div id="create-bar-avatar-skeleton" class="w-10 h-10 rounded-full bg-gray-300 animate-pulse"></div>
-                    <button id="add-tale-button" class="w-full bg-gray-100 hover:bg-gray-200 text-left text-gray-500 rounded-full py-3 px-4 transition">What's new on your journey?</button>
+                    <button id="add-tale-button" class="w-full bg-gray-100 hover:bg-gray-200 text-left text-gray-500 rounded-full py-3 px-4">What's new on your journey?</button>
                 </div>
-                </div>
+            </div>
         </div>
     </main>
     
     <div id="add-tale-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl transform transition-all">
-            <div class="flex justify-between items-center p-4 border-b border-gray-200">
-                <h3 class="text-xl font-bold text-gray-800">Create a New Tale</h3>
-                <button id="close-modal-button" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 class="text-xl font-bold">Create a New Tale</h3>
+                <button id="close-modal-button" class="text-gray-400 hover:text-gray-600">&times;</button>
             </div>
             <form id="tale-form" class="p-6 space-y-6">
-    <input type="hidden" id="edit-tale-id" name="edit_tale_id">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-            <label for="tale-category" class="block text-sm font-medium text-gray-700">Category</label>
-            <select id="tale-category" name="category" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg">
-                <option>Projects</option>
-                <option>Academics</option>
-                <option>Achievements</option>
-                <option>Leadership & Events</option>
-                <option>Research & Papers</option>
-            </select>
-        </div>
-        <div>
-            <label for="tale-title" class="block text-sm font-medium text-gray-700">Title</label>
-            <input type="text" id="tale-title" name="title" required class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg" placeholder="e.g., Won First Place at SIH 2025">
-        </div>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-            <label for="event-date" class="block text-sm font-medium text-gray-700">Date & Time of Event</label>
-            <input type="datetime-local" id="event-date" name="event_date" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg">
-        </div>
-        <div>
-            <label for="cover-image" class="block text-sm font-medium text-gray-700">Cover Image</label>
-            <input type="file" id="cover-image" name="cover_image" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
-        </div>
-    </div>
-    
-    <div>
-        <label class="block text-sm font-medium text-gray-700">Description</label>
-        <div id="description-editor" class="mt-1 bg-white"></div>
-    </div>
-
-    <div>
-        <label for="tale-tags" class="block text-sm font-medium text-gray-700">Tags (comma-separated)</label>
-        <input type="text" id="tale-tags" name="tags" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg" placeholder="e.g., React, Node.js, Leadership">
-    </div>
-</form>
-            <div class="flex justify-end items-center p-4 bg-gray-50 border-t border-gray-200 rounded-b-xl">
-                <button id="submit-tale-button" type="submit" form="tale-form" class="bg-[#007367] hover:bg-[#005f56] text-white font-bold py-2 px-6 rounded-lg transition-all">Post Tale</button>
+                <input type="hidden" id="edit-tale-id" name="edit_tale_id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="tale-category" class="block text-sm font-medium text-gray-700">Category</label>
+                        <select id="tale-category" name="category" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg"></select>
+                    </div>
+                    <div>
+                        <label for="tale-title" class="block text-sm font-medium text-gray-700">Title</label>
+                        <input type="text" id="tale-title" name="title" required class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="event-date" class="block text-sm font-medium text-gray-700">Date & Time of Event</label>
+                        <input type="datetime-local" id="event-date" name="event_date" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg">
+                    </div>
+                    <div>
+                        <label for="cover-image" class="block text-sm font-medium text-gray-700">Cover Image</label>
+                        <input type="file" id="cover-image" name="cover_image" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Description</label>
+                    <div id="description-editor" class="mt-1 bg-white"></div>
+                </div>
+                <div>
+                    <label for="tale-tags" class="block text-sm font-medium text-gray-700">Tags (comma-separated)</label>
+                    <input type="text" id="tale-tags" name="tags" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg">
+                </div>
+            </form>
+            <div class="flex justify-end items-center p-4 bg-gray-50 border-t">
+                <button id="submit-tale-button" type="submit" form="tale-form" class="bg-[#007367] hover:bg-[#005f56] text-white font-bold py-2 px-6 rounded-lg">Post Tale</button>
             </div>
         </div>
     </div>
