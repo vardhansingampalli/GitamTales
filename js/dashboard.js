@@ -35,8 +35,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const closeModalButton = document.getElementById('close-modal-button');
     const taleForm = document.getElementById('tale-form');
     const submitTaleButton = document.getElementById('submit-tale-button');
-    const sidebarProfileContent = document.getElementById('sidebar-profile-content');
-    const sidebarSkillsContent = document.getElementById('sidebar-skills-content');
+    const sidebarProfileContent = document.getElementById('sidebar-profile-content'); // Container ID
+    const sidebarSkillsContent = document.getElementById('sidebar-skills-content'); // Container ID
 
     // --- Initialize Quill Rich Text Editor (with safety check) ---
     let quill;
@@ -63,23 +63,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function loadUserProfile() {
         try {
             const { data: profile, error } = await supabaseClient.from('profiles').select('full_name, branch, bio, avatar_url').eq('id', user.id).single();
-            // Allow "No row found" errors, but log others
-            if (error && error.code !== 'PGRST116') throw error;
+            if (error && error.code !== 'PGRST116') throw error; // Allow "No row found"
 
             const displayName = profile?.full_name || user.email?.split('@')[0] || 'User';
             const avatarUrl = profile?.avatar_url ? `${profile.avatar_url}?t=${new Date().getTime()}` : `https://placehold.co/100x100/e0e7ff/3730a3?text=${displayName.charAt(0).toUpperCase()}`;
 
-            // Update Header
-            const headerAvatar = profileMenuButton?.querySelector('img');
-            const headerName = profileMenuButton?.querySelector('span');
-            // Remove skeleton class if they exist before updating
-            headerAvatar?.closest('div')?.classList.remove('bg-gray-300', 'animate-pulse');
-            headerName?.closest('div')?.classList.remove('bg-gray-300', 'animate-pulse');
-            if (headerAvatar) headerAvatar.src = avatarUrl.replace('100x100', '40x40');
-            if (headerName) headerName.textContent = displayName;
+            // Update Header (Target img/span directly)
+            const headerAvatarImg = profileMenuButton?.querySelector('img');
+            const headerNameSpan = profileMenuButton?.querySelector('span');
+            if(headerAvatarImg) {
+                 headerAvatarImg.src = avatarUrl.replace('100x100', '40x40');
+                 headerAvatarImg.closest('div')?.classList.remove('bg-gray-300', 'animate-pulse'); // Remove skeleton style if needed
+            } else { console.warn("Header avatar img not found"); }
+            if(headerNameSpan) {
+                headerNameSpan.textContent = displayName;
+                headerNameSpan.closest('div')?.classList.remove('bg-gray-300', 'animate-pulse'); // Remove skeleton style if needed
+            } else { console.warn("Header name span not found"); }
 
 
-            // Update Sidebar Profile Section
+            // Update Sidebar Profile Section using container ID
             if (sidebarProfileContent) {
                 sidebarProfileContent.innerHTML = `
                     <img src="${avatarUrl}" alt="User Avatar" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white shadow-lg object-cover">
@@ -87,22 +89,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <p class="text-gray-500 text-sm">${profile?.branch || 'Branch not set'}</p>
                     <p class="text-sm text-gray-600 mt-3 px-2 break-words">${profile?.bio || 'No bio yet.'}</p>
                 `;
-            }
+            } else { console.error("Sidebar profile content container not found!"); }
 
-            // Update "Create Tale" bar
-            const createBarAvatarContainer = addTaleButton?.previousElementSibling;
-            const createBarAvatarImg = createBarAvatarContainer?.querySelector('img'); // Check if img exists inside
+            // Update "Create Tale" bar avatar
+            const createBarAvatarContainer = addTaleButton?.previousElementSibling; // The div container
              if (createBarAvatarContainer && createBarAvatarContainer.id === 'create-bar-avatar-skeleton') {
-                 // Replace skeleton div
+                 // Replace skeleton div with the actual image
                  createBarAvatarContainer.outerHTML = `<img src="${avatarUrl.replace('100x100', '40x40')}" alt="User Avatar" class="w-10 h-10 rounded-full">`;
-             } else if (createBarAvatarImg) {
-                 // Update existing image src
-                 createBarAvatarImg.src = avatarUrl.replace('100x100', '40x40');
-             }
+             } else { console.warn("Create bar avatar skeleton not found or already replaced."); }
 
+             // Update "Create Tale" bar text
             if (addTaleButton) addTaleButton.textContent = `What's new on your journey, ${displayName}?`;
 
-            // Update Skills Section (Placeholders)
+            // Update Skills Section (Placeholders) using container ID
             if (sidebarSkillsContent) {
                  sidebarSkillsContent.innerHTML = `
                     <h3 class="font-bold text-gray-800 mb-3 text-sm uppercase tracking-wider">Skills</h3>
@@ -111,10 +110,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                         {/* Fetch real skills later */}
                     </div>
                  `;
-            }
+            } else { console.error("Sidebar skills content container not found!"); }
+
         } catch (error) {
             console.error('Error loading user profile:', error);
-            // Optionally display error in UI
+            // Optionally display error in UI, e.g., replace sidebar content with an error message
+            if (sidebarProfileContent) sidebarProfileContent.innerHTML = '<p class="text-red-500 text-center">Error loading profile.</p>';
         }
     }
 
@@ -177,7 +178,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const authorAvatar = tale.profiles?.avatar_url ? `${tale.profiles.avatar_url}?t=${new Date().getTime()}` : `https://placehold.co/40x40/e0e7ff/3730a3?text=${authorName.charAt(0).toUpperCase()}`;
         let postDate = 'a while ago'; // Fallback
         try {
-             // Ensure dateFns is loaded globally (check if needed, might cause issues if script fails to load)
+             // Check if dateFns is loaded globally
              if (typeof dateFns !== 'undefined' && dateFns.formatDistanceToNow) {
                  postDate = dateFns.formatDistanceToNow(new Date(tale.created_at), { addSuffix: true });
              } else {
@@ -205,16 +206,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // --- Initial Load ---
+    // Use try...catch for initial load in case of errors
     try {
         await Promise.all([loadUserProfile(), loadTales()]);
     } catch (error) {
         console.error("Error during initial page load:", error);
     }
 
-    // --- Event Listeners ---
+    // --- Event Listeners (with safety checks) ---
 
     profileMenuButton?.addEventListener('click', () => profileMenu?.classList.toggle('hidden'));
     document.addEventListener('click', (event) => {
+        // Close profile menu if clicking outside of it or its button
         if (profileMenu && !profileMenu.classList.contains('hidden') && profileMenuButton && !profileMenuButton.contains(event.target) && !profileMenu.contains(event.target)) {
              profileMenu.classList.add('hidden');
         }
@@ -227,22 +230,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     addTaleButton?.addEventListener('click', () => {
-        if (!addTaleModal || !taleForm || !quill || !submitTaleButton) return;
+        if (!addTaleModal || !taleForm || !quill || !submitTaleButton) {
+             console.error("Modal elements not found for Add Tale button");
+             return;
+        }
         taleForm.reset();
-        quill.setText('');
+        quill.setText(''); // Clear Quill editor
         const modalTitle = addTaleModal.querySelector('h3');
         if (modalTitle) modalTitle.textContent = 'Create a New Tale';
         submitTaleButton.textContent = 'Post Tale';
+        submitTaleButton.disabled = false; // Ensure button is enabled
         const editIdInput = document.getElementById('edit-tale-id');
-        if (editIdInput) editIdInput.value = '';
+        if (editIdInput) editIdInput.value = ''; // Clear edit ID
         addTaleModal.classList.remove('hidden');
     });
 
     closeModalButton?.addEventListener('click', () => addTaleModal?.classList.add('hidden'));
     addTaleModal?.addEventListener('click', (event) => {
+        // Close if clicking on the background overlay
         if (event.target === addTaleModal) addTaleModal.classList.add('hidden');
     });
 
+    // Event Delegation for Edit, Delete, Like buttons
     timelineFeed?.addEventListener('click', async (event) => {
         const editButton = event.target.closest('.edit-button');
         const deleteButton = event.target.closest('.delete-button');
@@ -260,9 +269,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                  taleForm.querySelector('#tale-title').value = tale.title || '';
                  const eventDateInput = taleForm.querySelector('#event-date');
                  const createdAtInput = taleForm.querySelector('#created-at-date');
-                 // Format dates carefully
-                 if(eventDateInput && tale.event_date) try { const d = new Date(tale.event_date); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); eventDateInput.value = d.toISOString().slice(0,16); } catch(e){} else if(eventDateInput) eventDateInput.value = '';
-                 if(createdAtInput && tale.created_at) try { const d = new Date(tale.created_at); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); createdAtInput.value = d.toISOString().slice(0,16); } catch(e){} else if(createdAtInput) createdAtInput.value = '';
+                 // Format dates carefully, adjusting for timezone for datetime-local
+                 if(eventDateInput && tale.event_date) try { const d = new Date(tale.event_date); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); eventDateInput.value = d.toISOString().slice(0,16); } catch(e){ eventDateInput.value = ''; } else if(eventDateInput) eventDateInput.value = '';
+                 if(createdAtInput && tale.created_at) try { const d = new Date(tale.created_at); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); createdAtInput.value = d.toISOString().slice(0,16); } catch(e){ createdAtInput.value = ''; } else if(createdAtInput) createdAtInput.value = '';
 
                  quill.root.innerHTML = tale.description || '';
                  taleForm.querySelector('#tale-tags').value = tale.tags || '';
@@ -270,6 +279,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                  addTaleModal.querySelector('h3').textContent = 'Edit Tale';
                  submitTaleButton.textContent = 'Save Changes';
+                 submitTaleButton.disabled = false; // Ensure button is enabled
                  addTaleModal.classList.remove('hidden');
              } catch (error) {
                  console.error('Error fetching tale for edit:', error);
@@ -304,23 +314,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!taleId || !likeCountElement) return;
             let currentLikes = parseInt(likeCountElement.textContent || '0');
 
+            // Prevent multiple clicks while processing
+            if (likeButton.disabled) return;
+            likeButton.disabled = true;
+
             // Optimistic UI update
             if (isLiked) {
                 likeButton.dataset.liked = 'false';
                 likeButton.classList.remove('text-red-500', 'fill-current');
-                likeCountElement.textContent = Math.max(0, currentLikes - 1); // Prevent negative likes
-                // Send unlike request to DB
-                supabaseClient.from('likes').delete().match({ user_id: user.id, tale_id: taleId }).then(({ error }) => {
-                    if (error) console.error("Error unliking:", error); // Log error
-                });
+                likeCountElement.textContent = Math.max(0, currentLikes - 1);
+                // Send unlike request
+                supabaseClient.from('likes').delete().match({ user_id: user.id, tale_id: taleId })
+                    .then(({ error }) => { if (error) console.error("Error unliking:", error); })
+                    .finally(() => { likeButton.disabled = false; }); // Re-enable button
             } else {
                 likeButton.dataset.liked = 'true';
                 likeButton.classList.add('text-red-500', 'fill-current');
                 likeCountElement.textContent = currentLikes + 1;
-                // Send like request to DB
-                supabaseClient.from('likes').insert({ user_id: user.id, tale_id: taleId }).then(({ error }) => {
-                   if (error) console.error("Error liking:", error); // Log error
-                });
+                // Send like request
+                supabaseClient.from('likes').insert({ user_id: user.id, tale_id: taleId })
+                   .then(({ error }) => { if (error) console.error("Error liking:", error); })
+                   .finally(() => { likeButton.disabled = false; }); // Re-enable button
             }
         }
     });
@@ -338,8 +352,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         taleData.description = quill.root.innerHTML;
         // Ensure dates are valid ISO strings or null, default created_at to now if blank
-        try { taleData.event_date = taleData.event_date ? new Date(taleData.event_date).toISOString() : null; } catch(e){ taleData.event_date = null; console.warn("Invalid event date");}
-        try { taleData.created_at = taleData.created_at ? new Date(taleData.created_at).toISOString() : new Date().toISOString(); } catch(e){ taleData.created_at = new Date().toISOString(); console.warn("Invalid created_at date, defaulting to now.");}
+        try { taleData.event_date = taleData.event_date ? new Date(taleData.event_date).toISOString() : null; } catch(e){ taleData.event_date = null; console.warn("Invalid event date format");}
+        try { taleData.created_at = taleData.created_at ? new Date(taleData.created_at).toISOString() : new Date().toISOString(); } catch(e){ taleData.created_at = new Date().toISOString(); console.warn("Invalid created_at date format, defaulting to now.");}
 
 
         try {
@@ -353,13 +367,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const { error: uploadError } = await supabaseClient.storage.from('tale-images').upload(fileName, coverImageFile, { upsert: true });
                 if (uploadError) throw uploadError;
                 const { data: urlData } = supabaseClient.storage.from('tale-images').getPublicUrl(fileName);
-                if (!urlData) throw new Error("Could not get public URL for image.");
+                if (!urlData?.publicUrl) throw new Error("Could not get public URL for image.");
                 // Append timestamp to URL to force browser refresh
                 taleData.cover_image_url = `${urlData.publicUrl}?t=${new Date().getTime()}`;
             } else if (editId && !coverImageFile?.size) {
                  // In edit mode, if no new file is chosen, *don't* modify the cover_image_url field
-                 delete taleData.cover_image_url;
+                 // Check if we need to explicitly set it to null or leave it out
+                 const { data: currentTale } = await supabaseClient.from('tales').select('cover_image_url').eq('id', editId).single();
+                 if (!currentTale?.cover_image_url) {
+                    taleData.cover_image_url = null; // Ensure it's null if it was null before
+                 } else {
+                    delete taleData.cover_image_url; // Don't send the field if unchanged
+                 }
+            } else if (!editId && (!coverImageFile || coverImageFile.size === 0)) {
+                 // Explicitly set to null if no image provided during creation
+                 taleData.cover_image_url = null;
             }
+
 
             // Clean up temporary fields before saving
             delete taleData.cover_image; // Remove file object from data to be saved
@@ -368,8 +392,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Perform Insert or Update
             const { error } = editId ?
-                await supabaseClient.from('tales').update(taleData).eq('id', editId) :
-                await supabaseClient.from('tales').insert([taleData]);
+                await supabaseClient.from('tales').update(taleData).eq('id', editId).select() : // Use select() to check RLS
+                await supabaseClient.from('tales').insert([taleData]).select(); // Use select() to check RLS
             if (error) throw error; // Throw error to be caught by catch block
 
             addTaleModal?.classList.add('hidden');
