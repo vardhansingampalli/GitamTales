@@ -5,6 +5,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.body.innerHTML = '<p class="text-red-600 text-center p-8">Error: Supabase client not found. Please check configuration.</p>';
         return;
     }
+    // Check if dateFns is available
+    if (typeof dateFns === 'undefined') {
+        console.error('date-fns library not found. Ensure it is loaded in the HTML.');
+        // Provide a fallback or stop execution if date formatting is critical
+    }
+
 
     // --- Auth Guard ---
     let user;
@@ -13,13 +19,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (sessionError) throw sessionError;
         if (!session) {
             window.location.href = 'login.html';
-            return;
+            return; // Stop script execution if redirecting
         }
-        user = session.user;
+        user = session.user; // Assign user only if session exists
     } catch (error) {
         console.error("Error during session check:", error);
         document.body.innerHTML = '<p class="text-red-600 text-center p-8">Error checking user session. Please try refreshing.</p>';
-        return;
+        return; // Stop script execution on error
     }
 
 
@@ -53,7 +59,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     } catch (e) {
         console.error("Failed to initialize Quill:", e);
-        // Display error or disable rich text features if Quill fails
         const editorContainer = document.getElementById('description-editor');
         if(editorContainer) editorContainer.innerHTML = '<p class="text-red-500">Error loading text editor.</p>';
     }
@@ -64,6 +69,7 @@ document.addEventListener('DOMContentLoaded', async () => {
      * Loads the user's profile information and updates the UI, replacing skeletons.
      */
     async function loadUserProfile() {
+        if (!user) return; // Don't run if user isn't defined
         try {
             const { data: profile, error } = await supabaseClient.from('profiles').select('full_name, branch, bio, avatar_url').eq('id', user.id).single();
             if (error && error.code !== 'PGRST116') throw error; // Allow "No row found"
@@ -74,15 +80,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Update Header (Target img/span directly, more robust)
             const headerAvatarImg = profileMenuButton?.querySelector('img');
             const headerNameSpan = profileMenuButton?.querySelector('span');
-            if(headerAvatarImg) {
+            // Remove skeleton placeholders before adding real elements
+             document.getElementById('header-avatar-skeleton')?.remove();
+             document.getElementById('header-name-skeleton')?.remove();
+            if(headerAvatarImg) { // Update if img already exists (e.g., from previous load)
                  headerAvatarImg.src = avatarUrl.replace('100x100', '40x40');
-                 // Attempt to remove skeleton styles if needed (might rely on IDs added previously)
-                 document.getElementById('header-avatar-skeleton')?.remove();
-            } else { console.warn("Header avatar img not found"); }
-            if(headerNameSpan) {
+            } else if (profileMenuButton) { // Insert img if it doesn't exist yet
+                 profileMenuButton.insertAdjacentHTML('afterbegin', `<img src="${avatarUrl.replace('100x100', '40x40')}" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-gray-200">`);
+            }
+            if(headerNameSpan) { // Update if span exists
                 headerNameSpan.textContent = displayName;
-                 document.getElementById('header-name-skeleton')?.remove();
-            } else { console.warn("Header name span not found"); }
+            } else if (profileMenuButton) { // Insert span if it doesn't exist
+                 profileMenuButton.insertAdjacentHTML('beforeend', `<span class="hidden sm:inline font-semibold text-gray-700">${displayName}</span>`);
+            }
 
 
             // Update Sidebar Profile Section using container ID
@@ -97,11 +107,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Update "Create Tale" bar avatar
             const createBarAvatarContainer = addTaleButton?.previousElementSibling; // The div container/img
-            if (createBarAvatarContainer && createBarAvatarContainer.tagName === 'DIV') { // If it's still the skeleton div
-                 createBarAvatarContainer.outerHTML = `<img src="${avatarUrl.replace('100x100', '40x40')}" alt="User Avatar" class="w-10 h-10 rounded-full">`;
-             } else if (createBarAvatarContainer && createBarAvatarContainer.tagName === 'IMG') { // If it's already an image
-                 createBarAvatarContainer.src = avatarUrl.replace('100x100', '40x40');
-             } else { console.warn("Create bar avatar element not found."); }
+             if (createBarAvatarContainer && createBarAvatarContainer.id === 'create-bar-avatar-skeleton') {
+                 // Replace skeleton div with the actual image
+                 createBarAvatarContainer.outerHTML = `<img src="${avatarUrl.replace('100x100', '40x40')}" alt="User Avatar" class="w-10 h-10 rounded-full flex-shrink-0">`;
+             } else { console.warn("Create bar avatar skeleton not found or already replaced."); }
 
 
              // Update "Create Tale" bar text
@@ -129,10 +138,7 @@ document.addEventListener('DOMContentLoaded', async () => {
      * Loads the user's tales, calculates likes, and renders them to the feed.
      */
     async function loadTales() {
-        if (!timelineFeed) {
-             console.error("Timeline feed element not found");
-             return;
-        }
+        if (!timelineFeed || !user) return; // Exit if feed element or user doesn't exist
 
         try {
             const { data: tales, error: talesError } = await supabaseClient.from('tales').select(`*, profiles ( full_name, avatar_url )`).eq('user_id', user.id).order('created_at', { ascending: false });
@@ -185,6 +191,8 @@ document.addEventListener('DOMContentLoaded', async () => {
      * Includes Edit/Delete icons and Like button functionality.
      */
     function createTaleCard(tale) {
+        if (!user) return ''; // Need user to determine ownership
+
         const authorName = tale.profiles?.full_name || 'A Gitamite';
         const authorAvatar = tale.profiles?.avatar_url ? `${tale.profiles.avatar_url}?t=${new Date().getTime()}` : `https://placehold.co/40x40/e0e7ff/3730a3?text=${authorName.charAt(0).toUpperCase()}`;
         let postDate = 'a while ago'; // Fallback
@@ -223,9 +231,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         await Promise.all([loadUserProfile(), loadTales()]);
     } catch (error) {
         console.error("Error during initial page load:", error);
+         // Show a generic error message if initial load fails
+         if(timelineFeed) timelineFeed.innerHTML = '<p class="text-red-500 text-center">Failed to load dashboard content.</p>';
+         else document.body.insertAdjacentHTML('beforeend', '<p class="text-red-500 text-center p-8">Failed to load dashboard content.</p>');
     }
 
-    // --- Event Listeners (with safety checks) ---
+    // --- Event Listeners ---
 
     profileMenuButton?.addEventListener('click', () => profileMenu?.classList.toggle('hidden'));
     document.addEventListener('click', (event) => {
@@ -427,4 +438,3 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 });
-
