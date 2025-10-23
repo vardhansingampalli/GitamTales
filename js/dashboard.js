@@ -53,6 +53,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     } catch (e) {
         console.error("Failed to initialize Quill:", e);
+        // Display error or disable rich text features if Quill fails
+        const editorContainer = document.getElementById('description-editor');
+        if(editorContainer) editorContainer.innerHTML = '<p class="text-red-500">Error loading text editor.</p>';
     }
 
     // --- Core Functions ---
@@ -68,16 +71,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             const displayName = profile?.full_name || user.email?.split('@')[0] || 'User';
             const avatarUrl = profile?.avatar_url ? `${profile.avatar_url}?t=${new Date().getTime()}` : `https://placehold.co/100x100/e0e7ff/3730a3?text=${displayName.charAt(0).toUpperCase()}`;
 
-            // Update Header (Target img/span directly)
+            // Update Header (Target img/span directly, more robust)
             const headerAvatarImg = profileMenuButton?.querySelector('img');
             const headerNameSpan = profileMenuButton?.querySelector('span');
             if(headerAvatarImg) {
                  headerAvatarImg.src = avatarUrl.replace('100x100', '40x40');
-                 headerAvatarImg.closest('div')?.classList.remove('bg-gray-300', 'animate-pulse'); // Remove skeleton style if needed
+                 // Attempt to remove skeleton styles if needed (might rely on IDs added previously)
+                 document.getElementById('header-avatar-skeleton')?.remove();
             } else { console.warn("Header avatar img not found"); }
             if(headerNameSpan) {
                 headerNameSpan.textContent = displayName;
-                headerNameSpan.closest('div')?.classList.remove('bg-gray-300', 'animate-pulse'); // Remove skeleton style if needed
+                 document.getElementById('header-name-skeleton')?.remove();
             } else { console.warn("Header name span not found"); }
 
 
@@ -92,11 +96,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else { console.error("Sidebar profile content container not found!"); }
 
             // Update "Create Tale" bar avatar
-            const createBarAvatarContainer = addTaleButton?.previousElementSibling; // The div container
-             if (createBarAvatarContainer && createBarAvatarContainer.id === 'create-bar-avatar-skeleton') {
-                 // Replace skeleton div with the actual image
+            const createBarAvatarContainer = addTaleButton?.previousElementSibling; // The div container/img
+            if (createBarAvatarContainer && createBarAvatarContainer.tagName === 'DIV') { // If it's still the skeleton div
                  createBarAvatarContainer.outerHTML = `<img src="${avatarUrl.replace('100x100', '40x40')}" alt="User Avatar" class="w-10 h-10 rounded-full">`;
-             } else { console.warn("Create bar avatar skeleton not found or already replaced."); }
+             } else if (createBarAvatarContainer && createBarAvatarContainer.tagName === 'IMG') { // If it's already an image
+                 createBarAvatarContainer.src = avatarUrl.replace('100x100', '40x40');
+             } else { console.warn("Create bar avatar element not found."); }
+
 
              // Update "Create Tale" bar text
             if (addTaleButton) addTaleButton.textContent = `What's new on your journey, ${displayName}?`;
@@ -114,7 +120,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         } catch (error) {
             console.error('Error loading user profile:', error);
-            // Optionally display error in UI, e.g., replace sidebar content with an error message
+            // Provide fallback UI in case of error
             if (sidebarProfileContent) sidebarProfileContent.innerHTML = '<p class="text-red-500 text-center">Error loading profile.</p>';
         }
     }
@@ -123,7 +129,10 @@ document.addEventListener('DOMContentLoaded', async () => {
      * Loads the user's tales, calculates likes, and renders them to the feed.
      */
     async function loadTales() {
-        if (!timelineFeed) return; // Exit if feed element doesn't exist
+        if (!timelineFeed) {
+             console.error("Timeline feed element not found");
+             return;
+        }
 
         try {
             const { data: tales, error: talesError } = await supabaseClient.from('tales').select(`*, profiles ( full_name, avatar_url )`).eq('user_id', user.id).order('created_at', { ascending: false });
@@ -165,7 +174,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         } catch (error) {
             console.error('Error loading tales:', error);
-            timelineFeed.innerHTML = '<p class="text-red-500 text-center">Error loading tales.</p>';
+            // Clear feed and show error
+            timelineFeed.querySelectorAll('.tale-card').forEach(card => card.remove()); // Clear potentially partial list
+            timelineFeed.insertAdjacentHTML('beforeend', '<p class="text-red-500 text-center tale-card">Error loading tales.</p>');
         }
     }
 
@@ -183,6 +194,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                  postDate = dateFns.formatDistanceToNow(new Date(tale.created_at), { addSuffix: true });
              } else {
                  postDate = new Date(tale.created_at).toLocaleDateString(); // Fallback date format
+                 if (typeof dateFns === 'undefined') console.warn("date-fns library not found, using basic date format.");
              }
         } catch(e){ console.warn("Could not format date:", tale.created_at, e); }
 
@@ -270,8 +282,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                  const eventDateInput = taleForm.querySelector('#event-date');
                  const createdAtInput = taleForm.querySelector('#created-at-date');
                  // Format dates carefully, adjusting for timezone for datetime-local
-                 if(eventDateInput && tale.event_date) try { const d = new Date(tale.event_date); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); eventDateInput.value = d.toISOString().slice(0,16); } catch(e){ eventDateInput.value = ''; } else if(eventDateInput) eventDateInput.value = '';
-                 if(createdAtInput && tale.created_at) try { const d = new Date(tale.created_at); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); createdAtInput.value = d.toISOString().slice(0,16); } catch(e){ createdAtInput.value = ''; } else if(createdAtInput) createdAtInput.value = '';
+                 if(eventDateInput && tale.event_date) try { const d = new Date(tale.event_date); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); eventDateInput.value = d.toISOString().slice(0,16); } catch(e){ eventDateInput.value = ''; console.warn("Could not parse event_date for edit:", tale.event_date); } else if(eventDateInput) eventDateInput.value = '';
+                 if(createdAtInput && tale.created_at) try { const d = new Date(tale.created_at); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); createdAtInput.value = d.toISOString().slice(0,16); } catch(e){ createdAtInput.value = ''; console.warn("Could not parse created_at for edit:", tale.created_at);} else if(createdAtInput) createdAtInput.value = '';
 
                  quill.root.innerHTML = tale.description || '';
                  taleForm.querySelector('#tale-tags').value = tale.tags || '';
@@ -322,8 +334,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (isLiked) {
                 likeButton.dataset.liked = 'false';
                 likeButton.classList.remove('text-red-500', 'fill-current');
-                likeCountElement.textContent = Math.max(0, currentLikes - 1);
-                // Send unlike request
+                likeCountElement.textContent = Math.max(0, currentLikes - 1); // Prevent negative likes
+                // Send unlike request to DB
                 supabaseClient.from('likes').delete().match({ user_id: user.id, tale_id: taleId })
                     .then(({ error }) => { if (error) console.error("Error unliking:", error); })
                     .finally(() => { likeButton.disabled = false; }); // Re-enable button
@@ -331,7 +343,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 likeButton.dataset.liked = 'true';
                 likeButton.classList.add('text-red-500', 'fill-current');
                 likeCountElement.textContent = currentLikes + 1;
-                // Send like request
+                // Send like request to DB
                 supabaseClient.from('likes').insert({ user_id: user.id, tale_id: taleId })
                    .then(({ error }) => { if (error) console.error("Error liking:", error); })
                    .finally(() => { likeButton.disabled = false; }); // Re-enable button
