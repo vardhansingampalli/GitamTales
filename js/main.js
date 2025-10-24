@@ -1,155 +1,273 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    // Check if Supabase client is available
     if (typeof supabaseClient === 'undefined') {
         console.error('Supabase client is not initialized.');
+        document.body.innerHTML = '<p class="text-red-500 text-center p-8">Error: Supabase client not found.</p>';
         return;
+    }
+     // Check if dateFns is available (optional for homepage)
+    if (typeof dateFns === 'undefined') {
+        console.warn('date-fns library not found. Dates might not be formatted relatively.');
     }
 
     // --- SESSION CHECK & REDIRECT ---
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (session) {
-        window.location.href = 'dashboard.html';
-    } else {
-        document.body.style.opacity = 1;
-
-        // --- Setup for Logged-Out Users ---
-        setupHomepage();
-        loadDiscoverTales();
-        setupModalControls(); // <-- Call to set up modal close events
+    let user = null;
+    try {
+        const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+        if (sessionError) throw sessionError;
+        if (session) {
+            // If a user is logged in, redirect them immediately.
+            window.location.href = 'dashboard.html';
+            return; // Stop script execution
+        }
+    } catch (error) {
+         console.error("Error during session check:", error);
+         // Allow homepage to load even if session check fails
     }
-});
+
+    // --- If no session, proceed with loading homepage ---
+    document.body.style.opacity = 1; // Make body visible
+    setupHomepage();
+    loadDiscoverTalesPreview(); // Load the preview carousel
+    setupModalControls();
+
+}); // End DOMContentLoaded
+
 
 /**
- * Sets up basic event listeners for the homepage.
+ * Basic homepage setup (menu, year).
  */
 function setupHomepage() {
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     const mobileMenuNav = document.getElementById('mobile-menu');
-    if (mobileMenuButton && mobileMenuNav) {
-        mobileMenuButton.addEventListener('click', () => mobileMenuNav.classList.toggle('hidden'));
-    }
+    mobileMenuButton?.addEventListener('click', () => mobileMenuNav?.classList.toggle('hidden'));
+
     const yearSpan = document.getElementById('year');
     if (yearSpan) yearSpan.textContent = new Date().getFullYear();
 }
 
 /**
- * Sets up the event listeners to close the tale detail modal.
+ * Sets up listeners to close the tale detail modal.
  */
 function setupModalControls() {
     const taleModal = document.getElementById('tale-detail-modal');
     const closeModalButton = document.getElementById('close-tale-modal');
 
-    if (taleModal && closeModalButton) {
-        closeModalButton.addEventListener('click', () => taleModal.classList.add('hidden'));
-        // Also close if the user clicks on the dark background
-        taleModal.addEventListener('click', (event) => {
-            if (event.target === taleModal) {
-                taleModal.classList.add('hidden');
-            }
-        });
-    }
-}
-
-/**
- * Fetches and displays the latest tales in the Discover section.
- */
-async function loadDiscoverTales() {
-    const discoverGrid = document.getElementById('discover-grid');
-    if (!discoverGrid) return;
-
-    const { data: tales, error } = await supabaseClient
-        .from('tales')
-        .select(`*, profiles ( full_name, branch, avatar_url )`)
-        .order('created_at', { ascending: false })
-        .limit(6);
-
-    if (error) {
-        console.error("Error fetching discover tales:", error);
-        discoverGrid.innerHTML = `<p class="text-center text-red-500 col-span-3">Could not load journeys.</p>`;
-        return;
-    }
-
-    discoverGrid.innerHTML = '';
-
-    if (tales.length === 0) {
-        discoverGrid.innerHTML = `<p class="text-center text-gray-500 col-span-3">No journeys have been shared yet.</p>`;
-    } else {
-        for (const tale of tales) {
-            const cardHTML = createDiscoverCard(tale);
-            discoverGrid.insertAdjacentHTML('beforeend', cardHTML);
-        }
-    }
-    
-    // --- ADDED: Event listener for clicks on the cards ---
-    discoverGrid.addEventListener('click', (event) => {
-        const card = event.target.closest('.discover-card');
-        if (card) {
-            const taleData = JSON.parse(card.dataset.tale);
-            showTaleInModal(taleData);
+    closeModalButton?.addEventListener('click', () => taleModal?.classList.add('hidden'));
+    taleModal?.addEventListener('click', (event) => {
+        // Close if clicking on the background overlay
+        if (event.target === taleModal) {
+            taleModal.classList.add('hidden');
         }
     });
 }
 
 /**
- * Populates and shows the modal with the details of a specific tale.
- * @param {object} tale - The full tale object.
+ * Populates and shows the modal with tale details.
  */
 function showTaleInModal(tale) {
     const modalBody = document.getElementById('modal-body-content');
     const taleModal = document.getElementById('tale-detail-modal');
-    
+    const modalTitle = document.getElementById('modal-title'); // Get title element
+
+    if (!modalBody || !taleModal || !tale) return; // Safety check
+
     const authorName = tale.profiles?.full_name || 'A Gitamite';
-    const authorAvatar = tale.profiles?.avatar_url 
+    const authorAvatar = tale.profiles?.avatar_url
         ? `${tale.profiles.avatar_url}?t=${new Date().getTime()}`
         : `https://placehold.co/40x40/e0e7ff/3730a3?text=${authorName.charAt(0).toUpperCase()}`;
-    const postDate = new Date(tale.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-    const coverImageHTML = tale.cover_image_url ? `<img src="${tale.cover_image_url}" alt="${tale.title}" class="w-full h-56 object-cover rounded-lg my-4">` : '';
 
+    let postDate = 'a while ago';
+    try {
+        if(typeof dateFns !== 'undefined' && dateFns.formatDistanceToNow) { // Use relative date if available
+            postDate = dateFns.formatDistanceToNow(new Date(tale.created_at), { addSuffix: true });
+        } else {
+            postDate = new Date(tale.created_at).toLocaleDateString(); // Fallback
+        }
+    } catch(e){ console.warn("Could not format date in modal:", tale.created_at, e); }
+
+    const coverImageHTML = tale.cover_image_url ? `<img src="${tale.cover_image_url}" alt="${tale.title}" class="w-full h-auto max-h-72 object-cover rounded-lg my-4 border border-gray-100">` : '';
+
+    // Update modal title
+    if(modalTitle) modalTitle.textContent = tale.title || 'Tale Details';
+
+    // Update modal body content
     modalBody.innerHTML = `
-        <p class="text-sm font-semibold text-[#007367]">${tale.category}</p>
-        <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mt-1">${tale.title}</h2>
-        
+        <p class="text-sm font-semibold text-[#007367]">${tale.category || 'Uncategorized'}</p>
+
         <div class="flex items-center my-4">
-            <img src="${authorAvatar}" alt="${authorName}'s Avatar" class="w-10 h-10 rounded-full mr-3">
+            <img src="${authorAvatar}" alt="${authorName}'s Avatar" class="w-10 h-10 rounded-full mr-3 shadow-sm border border-gray-100">
             <div>
                 <p class="font-semibold text-gray-800">${authorName}</p>
-                <p class="text-sm text-gray-500">Posted on ${postDate}</p>
+                <p class="text-sm text-gray-500">Posted ${postDate}</p>
             </div>
         </div>
-        
+
         ${coverImageHTML}
-        
-        <div class="prose max-w-none text-gray-700 mt-4">${tale.description}</div>
+
+        <div class="prose prose-sm max-w-none text-gray-700 mt-4 break-words">${tale.description || 'No description provided.'}</div>
     `;
 
-    taleModal.classList.remove('hidden');
+    taleModal.classList.remove('hidden'); // Show the modal
+}
+
+
+// --- Discover Preview Carousel Logic ---
+let allPreviewTales = []; // Cache fetched tales
+let currentPreviewPage = 0;
+const TALES_PER_PAGE = 4; // Number of tales to show per page
+
+/**
+ * Loads tales for the homepage carousel preview.
+ */
+async function loadDiscoverTalesPreview() {
+    const discoverGrid = document.getElementById('discover-grid');
+    const prevButton = document.getElementById('prev-tale');
+    const nextButton = document.getElementById('next-tale');
+    if (!discoverGrid || !prevButton || !nextButton) {
+        console.error("Carousel elements not found (discover-grid, prev-tale, or next-tale).");
+        return;
+    }
+
+    try {
+        // Fetch more tales (e.g., 12) for the carousel
+        const { data: tales, error } = await supabaseClient
+            .from('tales')
+            .select(`*, profiles ( full_name, branch, avatar_url )`) // Fetch necessary profile info
+            .order('created_at', { ascending: false })
+            .limit(12); // Fetch enough for a few pages
+
+        if (error) throw error;
+
+        allPreviewTales = tales || [];
+        displayPreviewPage(0); // Display the first page
+
+        // Setup button listeners only if pagination is needed
+        if (allPreviewTales.length > TALES_PER_PAGE) {
+            prevButton.classList.remove('hidden');
+            nextButton.classList.remove('hidden');
+
+            // --- Clear potential duplicate listeners before adding ---
+            // Clone and replace to remove old listeners safely
+            const newPrevButton = prevButton.cloneNode(true);
+            prevButton.parentNode?.replaceChild(newPrevButton, prevButton); // Use parentNode for safety
+            const newNextButton = nextButton.cloneNode(true);
+            nextButton.parentNode?.replaceChild(newNextButton, nextButton);
+
+            // Add new listeners
+            newPrevButton.addEventListener('click', () => {
+                currentPreviewPage = Math.max(0, currentPreviewPage - 1);
+                displayPreviewPage(currentPreviewPage);
+            });
+            newNextButton.addEventListener('click', () => {
+                const maxPage = Math.ceil(allPreviewTales.length / TALES_PER_PAGE) - 1;
+                currentPreviewPage = Math.min(maxPage, currentPreviewPage + 1);
+                displayPreviewPage(currentPreviewPage);
+            });
+        } else {
+             // Hide buttons if not enough items for pagination
+             prevButton.classList.add('hidden');
+             nextButton.classList.add('hidden');
+        }
+
+         // Add event listener for clicks on the cards (for modal popup)
+        discoverGrid.addEventListener('click', (event) => {
+            const card = event.target.closest('.discover-card');
+            if (card && card.dataset.tale) { // Check if data is present
+                try {
+                     // Sanitize the string before parsing
+                     const sanitizedJsonString = card.dataset.tale.replace(/&apos;/g, "'").replace(/&quot;/g, '"');
+                     const taleData = JSON.parse(sanitizedJsonString);
+                     showTaleInModal(taleData);
+                } catch (e) { console.error("Error parsing tale data for modal:", e, card.dataset.tale); }
+            }
+        });
+
+    } catch (error) {
+        console.error("Error fetching discover tales for preview:", error);
+        discoverGrid.innerHTML = `<p class="text-center text-red-500 col-span-full">Could not load journeys.</p>`;
+    }
 }
 
 /**
- * Creates the HTML string for a single tale card on the homepage.
- * @param {object} tale - The tale object from Supabase.
- * @returns {string} The HTML for the card.
+ * Displays a specific "page" of tales in the preview grid.
+ * @param {number} pageIndex - The 0-based index of the page to display.
+ */
+function displayPreviewPage(pageIndex) {
+    const discoverGrid = document.getElementById('discover-grid');
+    const prevButton = document.getElementById('prev-tale'); // Re-select potentially replaced button
+    const nextButton = document.getElementById('next-tale'); // Re-select potentially replaced button
+    if (!discoverGrid || !prevButton || !nextButton) return;
+
+    const startIndex = pageIndex * TALES_PER_PAGE;
+    const endIndex = startIndex + TALES_PER_PAGE;
+    const talesToShow = allPreviewTales.slice(startIndex, endIndex);
+
+    discoverGrid.innerHTML = ''; // Clear previous cards/skeletons
+
+    if (talesToShow.length === 0 && pageIndex === 0) {
+         discoverGrid.innerHTML = `<p class="text-center text-gray-500 col-span-full">No journeys posted yet.</p>`;
+    } else {
+        talesToShow.forEach(tale => {
+            const cardHTML = createDiscoverCard(tale);
+            discoverGrid.insertAdjacentHTML('beforeend', cardHTML);
+        });
+        // Add invisible placeholders if less than 4 tales to maintain grid layout on large screens
+         if (talesToShow.length < TALES_PER_PAGE) {
+             for (let i = talesToShow.length; i < TALES_PER_PAGE; i++) {
+                 // Adjust visibility based on breakpoints if needed, e.g., hidden lg:block
+                 discoverGrid.insertAdjacentHTML('beforeend', '<div class="hidden lg:block"></div>');
+             }
+         }
+    }
+
+    // Update button disabled states
+    const maxPage = Math.ceil(allPreviewTales.length / TALES_PER_PAGE) - 1;
+    prevButton.disabled = pageIndex === 0;
+    nextButton.disabled = pageIndex >= maxPage || allPreviewTales.length <= TALES_PER_PAGE;
+}
+
+/**
+ * Creates the HTML string for a single tale card on the homepage preview.
+ * Includes hover effects and data attribute for the modal.
  */
 function createDiscoverCard(tale) {
-    const authorName = tale.profiles?.full_name || 'A Gitamite';
+     const authorName = tale.profiles?.full_name || 'A Gitamite';
     const authorBranch = tale.profiles?.branch || 'GITAM Student';
-    const authorAvatar = tale.profiles?.avatar_url 
+    const authorAvatar = tale.profiles?.avatar_url
         ? `${tale.profiles.avatar_url}?t=${new Date().getTime()}`
         : `https://placehold.co/40x40/e0e7ff/3730a3?text=${authorName.charAt(0).toUpperCase()}`;
+    const coverImage = tale.cover_image_url || `https://placehold.co/600x400/007367/ffffff?text=${encodeURIComponent(tale.category || 'Tale')}`;
 
-    const coverImage = tale.cover_image_url || `https://placehold.co/600x400/007367/ffffff?text=${encodeURIComponent(tale.category)}`;
+    // Escape potentially problematic characters in tale data for the data attribute
+     let safeTaleData = '{}'; // Default to empty object string
+     try {
+        // Only include necessary fields for the modal
+        const modalData = {
+            title: tale.title,
+            category: tale.category,
+            description: tale.description,
+            cover_image_url: tale.cover_image_url,
+            created_at: tale.created_at,
+            profiles: { // Nest profile info
+                full_name: tale.profiles?.full_name,
+                avatar_url: tale.profiles?.avatar_url
+            }
+        };
+        safeTaleData = JSON.stringify(modalData).replace(/'/g, '&apos;').replace(/"/g, '&quot;');
+     } catch (e) { console.error("Error stringifying tale data:", e); }
 
-    // --- UPDATED: Added 'discover-card' class and data-tale attribute ---
+
     return `
-        <div class="bg-white rounded-lg overflow-hidden border border-gray-200 transform hover:-translate-y-1 transition-transform duration-300 cursor-pointer discover-card" 
-             data-tale='${JSON.stringify(tale)}'>
-            <img src="${coverImage}" alt="${tale.title}" class="w-full h-48 object-cover pointer-events-none">
-            <div class="p-6 pointer-events-none">
-                <p class="text-sm font-semibold text-[#007367] mb-1">${tale.category}</p>
-                <h3 class="text-lg font-bold text-gray-900 mb-2 truncate" title="${tale.title}">${tale.title}</h3>
-                <div class="flex items-center">
-                    <img src="${authorAvatar}" alt="${authorName}'s Avatar" class="w-10 h-10 rounded-full mr-3 border-2 border-white">
-                    <div>
-                        <p class="font-semibold text-gray-800">${authorName}</p>
+        <div class="bg-white rounded-lg overflow-hidden border border-gray-200 transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1 cursor-pointer discover-card flex flex-col"
+             data-tale='${safeTaleData}'>
+            <img src="${coverImage}" alt="${tale.title || 'Tale image'}" class="w-full h-48 object-cover pointer-events-none">
+            <div class="p-6 pointer-events-none flex flex-col flex-grow">
+                <p class="text-sm font-semibold text-[#007367] mb-1">${tale.category || 'Uncategorized'}</p>
+                <h3 class="text-lg font-bold text-gray-900 mb-2 truncate" title="${tale.title}">${tale.title || 'Untitled Tale'}</h3>
+                <div class="mt-auto flex items-center pt-3 border-t border-gray-100"> <img src="${authorAvatar}" alt="${authorName}'s Avatar" class="w-10 h-10 rounded-full mr-3 border-2 border-white shadow-sm flex-shrink-0">
+                    <div class="min-w-0">
+                        <p class="font-semibold text-gray-800 truncate">${authorName}</p>
                         <p class="text-sm text-gray-500">${authorBranch}</p>
                     </div>
                 </div>
