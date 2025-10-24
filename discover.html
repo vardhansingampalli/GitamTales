@@ -8,25 +8,51 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-client.js"></script>
-</head>
-<body class="bg-gray-50">
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@3.6.0/cdn.min.js"></script>
+    <link rel="stylesheet" href="css/style.css"> <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-client.js"></script> </head>
+<body class="bg-gray-100">
 
-    <header class="bg-white shadow-sm sticky top-0 z-50">
+    <header class="bg-white shadow-sm sticky top-0 z-50 border-b border-gray-100">
         <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
             <a href="index.html" class="text-2xl font-bold text-[#007367]">GitamTales</a>
+             <div id="auth-status" class="flex items-center space-x-4">
+                <a href="login.html" class="text-gray-600 hover:text-[#007367] text-sm font-medium">Log In</a>
+                <a href="signup.html" class="bg-[#007367] hover:bg-[#005f56] text-white font-semibold py-2 px-4 rounded-lg text-sm">Sign Up</a>
+                <div id="profile-menu-container" class="hidden relative">
+                     <button id="profile-menu-button" class="flex items-center space-x-2">
+                         </button>
+                     <div id="profile-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 border border-gray-100">
+                         <a href="dashboard.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Journey</a>
+                         <a href="settings.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
+                         <hr class="my-1 border-gray-100">
+                         <a href="#" id="logout-button" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Log Out</a>
+                     </div>
+                </div>
+            </div>
         </nav>
     </header>
 
-    <main class="container mx-auto px-6 py-10">
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div class="max-w-3xl mx-auto">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Discover All Journeys</h1>
-            <p class="text-gray-600 mb-8">Explore every project, achievement, and story from the GitamTales community.</p>
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2 text-center">Discover Journeys</h1>
+            <p class="text-gray-600 mb-8 text-center">Explore projects, achievements, and stories from the GitamTales community.</p>
 
-            <div id="discover-feed">
-                <div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6 p-6 animate-pulse">
+            <div class="mb-8 p-4 bg-white border border-gray-200 rounded-xl flex flex-col md:flex-row gap-4 items-center shadow-sm">
+                <input type="search" id="search-input" placeholder="Search by keyword, name, skill..." class="w-full md:flex-1 bg-gray-100 border-gray-200 rounded-lg px-4 py-3 focus:ring-[#007367] focus:border-[#007367]">
+                <select id="category-filter" class="w-full md:w-48 bg-gray-100 border-gray-200 rounded-lg px-4 py-3 focus:ring-[#007367] focus:border-[#007367]">
+                    <option value="">All Categories</option>
+                    <option>Projects</option>
+                    <option>Academics</option>
+                    <option>Achievements</option>
+                    <option>Leadership & Events</option>
+                    <option>Research & Papers</option>
+                    <option>Reflections</option>
+                </select>
+            </div>
+
+            <div id="discover-feed" class="space-y-6">
+                <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6 animate-pulse">
                     <div class="flex items-center mb-4">
                         <div class="w-10 h-10 rounded-full bg-gray-300 mr-3"></div>
                         <div>
@@ -34,13 +60,25 @@
                             <div class="h-3 w-48 bg-gray-300 rounded mt-2"></div>
                         </div>
                     </div>
-                    <div class="h-6 w-3/4 bg-gray-300 rounded mb-2"></div>
-                    <div class="h-4 w-full bg-gray-300 rounded mt-2"></div>
+                    <div class="h-6 w-3/4 bg-gray-300 rounded mb-3"></div>
+                    <div class="space-y-2">
+                        <div class="h-4 w-full bg-gray-300 rounded"></div>
+                        <div class="h-4 w-5/6 bg-gray-300 rounded"></div>
+                    </div>
+                     <div class="w-full h-48 bg-gray-300 mt-4 rounded-lg"></div>
                 </div>
+                 <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6 animate-pulse">
+                     <div class="flex items-center mb-4"> <div class="w-10 h-10 rounded-full bg-gray-300 mr-3"></div> <div> <div class="h-4 w-32 bg-gray-300 rounded"></div> <div class="h-3 w-48 bg-gray-300 rounded mt-2"></div> </div> </div> <div class="h-6 w-3/4 bg-gray-300 rounded mb-3"></div> <div class="space-y-2"> <div class="h-4 w-full bg-gray-300 rounded"></div> <div class="h-4 w-5/6 bg-gray-300 rounded"></div> </div> <div class="w-full h-48 bg-gray-300 mt-4 rounded-lg"></div>
+                 </div>
+                 <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6 animate-pulse">
+                      <div class="flex items-center mb-4"> <div class="w-10 h-10 rounded-full bg-gray-300 mr-3"></div> <div> <div class="h-4 w-32 bg-gray-300 rounded"></div> <div class="h-3 w-48 bg-gray-300 rounded mt-2"></div> </div> </div> <div class="h-6 w-3/4 bg-gray-300 rounded mb-3"></div> <div class="space-y-2"> <div class="h-4 w-full bg-gray-300 rounded"></div> <div class="h-4 w-5/6 bg-gray-300 rounded"></div> </div> <div class="w-full h-48 bg-gray-300 mt-4 rounded-lg"></div>
+                 </div>
+            </div>
+            <div id="no-results-message" class="hidden text-center text-gray-500 mt-8 py-10">
+                No journeys found matching your criteria.
             </div>
         </div>
     </main>
 
-    <script src="js/discover.js"></script>
-</body>
+    <script src="js/discover.js"></script> </body>
 </html>

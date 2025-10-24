@@ -1,70 +1,264 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    if (typeof supabaseClient === 'undefined') {
-        console.error('Supabase client is not initialized.');
-        return;
-    }
+    // Check Supabase and dateFns
+    if (typeof supabaseClient === 'undefined') { console.error('Supabase client missing.'); return; }
+    if (typeof dateFns === 'undefined') { console.error('date-fns missing.'); }
 
+    // --- Authentication Check ---
+    let user = null;
+    let userProfile = null;
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) {
+        user = session.user;
+        // Fetch minimal profile for header
+        const { data: profileData } = await supabaseClient.from('profiles').select('full_name, avatar_url').eq('id', user.id).single();
+        userProfile = profileData;
+    }
+    updateHeaderAuthStatus(); // Update header based on session
+
+    // --- Get Page Elements ---
     const discoverFeed = document.getElementById('discover-feed');
+    const searchInput = document.getElementById('search-input');
+    const categoryFilter = document.getElementById('category-filter');
+    const noResultsMessage = document.getElementById('no-results-message');
+
+    let allTales = []; // Cache for filtering
+
+    // --- Core Functions ---
 
     /**
-     * Fetches ALL tales and renders them.
+     * Updates the header to show Login/Signup or Profile Menu.
      */
-    async function loadAllTales() {
-        const { data: tales, error } = await supabaseClient
-            .from('tales')
-            .select(`*, profiles ( full_name, avatar_url )`)
-            .order('created_at', { ascending: false });
+    function updateHeaderAuthStatus() {
+        const authStatusDiv = document.getElementById('auth-status');
+        if (!authStatusDiv) return;
 
-        if (error) {
-            console.error('Error fetching tales:', error);
-            discoverFeed.innerHTML = '<p class="text-center text-red-500">Could not load tales. Please try again.</p>';
-            return;
+        if (user && userProfile) {
+            // Logged In: Show profile menu
+            const profileMenuContainer = document.getElementById('profile-menu-container');
+            const profileMenuButton = document.getElementById('profile-menu-button');
+            const logoutButton = document.getElementById('logout-button');
+
+            // Clear default login/signup buttons
+            authStatusDiv.innerHTML = '';
+            authStatusDiv.appendChild(profileMenuContainer); // Move the hidden template into view
+
+            const displayName = userProfile.full_name || user.email?.split('@')[0] || 'User';
+            const avatarUrl = userProfile.avatar_url ? `${userProfile.avatar_url}?t=${new Date().getTime()}` : `https://placehold.co/40x40/e0e7ff/3730a3?text=${displayName.charAt(0).toUpperCase()}`;
+
+            profileMenuButton.innerHTML = `
+                <img src="${avatarUrl}" alt="User Avatar" class="w-8 h-8 rounded-full border border-gray-200">
+                <span class="hidden sm:inline font-semibold text-gray-700 text-sm">${displayName}</span>
+            `;
+            profileMenuContainer.classList.remove('hidden');
+
+            // Add event listeners for profile menu and logout
+            profileMenuButton.addEventListener('click', () => {
+                 document.getElementById('profile-menu')?.classList.toggle('hidden');
+            });
+            logoutButton?.addEventListener('click', async (e) => {
+                e.preventDefault();
+                await supabaseClient.auth.signOut();
+                window.location.reload(); // Reload discover page as logged-out user
+            });
+            // Close dropdown if clicking outside
+             document.addEventListener('click', (event) => {
+                 const profileMenu = document.getElementById('profile-menu');
+                 if (profileMenu && !profileMenu.classList.contains('hidden') && profileMenuButton && !profileMenuButton.contains(event.target) && !profileMenu.contains(event.target)) {
+                      profileMenu.classList.add('hidden');
+                 }
+            });
+
         }
+        // If not logged in, the default HTML Login/Signup buttons remain visible.
+    }
 
-        // Clear skeleton loaders
-        discoverFeed.innerHTML = '';
 
-        if (tales.length === 0) {
-            discoverFeed.innerHTML = '<p class="text-center text-gray-500">No tales have been shared yet.</p>';
-        } else {
-            for (const tale of tales) {
-                const taleCard = createTaleCard(tale);
-                discoverFeed.insertAdjacentHTML('beforeend', taleCard);
+    /**
+     * Fetches public tales, excluding the logged-in user's own tales.
+     */
+    async function fetchPublicTales() {
+        if (!discoverFeed) return;
+        discoverFeed.innerHTML = createSkeletonLoaders(6); // Show more skeletons
+
+        try {
+            let query = supabaseClient
+                .from('tales')
+                .select(`*, profiles ( full_name, avatar_url )`) // Fetch necessary profile info
+                .order('created_at', { ascending: false });
+
+            // ** IMPORTANT: Exclude logged-in user's tales **
+            if (user) {
+                query = query.neq('user_id', user.id); // 'neq' means "not equal to"
             }
+
+            const { data, error } = await query;
+            if (error) throw error;
+
+            allTales = data || [];
+
+            // Fetch likes only if the user is logged in (needed for like status)
+            let likes = [];
+            if (user && allTales.length > 0) {
+                 const taleIds = allTales.map(t => t.id);
+                 const { data: likesData, error: likesError } = await supabaseClient.from('likes').select('tale_id, user_id').in('tale_id', taleIds);
+                 if (likesError) console.error('Error fetching likes:', likesError);
+                 else likes = likesData || [];
+            }
+
+            // Add like info to tales data before displaying
+            allTales.forEach(tale => {
+                 const taleLikes = likes.filter(l => l.tale_id === tale.id);
+                 tale.like_count = taleLikes.length;
+                 tale.user_has_liked = user ? taleLikes.some(l => l.user_id === user.id) : false; // Only check if user is logged in
+            });
+
+
+            displayTales(allTales); // Display filtered tales
+
+        } catch (error) {
+            console.error('Error fetching tales:', error);
+            discoverFeed.innerHTML = '<p class="text-center text-red-500 col-span-full py-10">Could not load tales. Please try refreshing.</p>';
         }
     }
 
     /**
-     * Creates the HTML for a single tale card (same as dashboard).
+     * Filters currently loaded tales based on search term and category.
      */
-    function createTaleCard(tale) {
+    function filterAndDisplayTales() {
+        // ... (This function remains the same as before) ...
+         if (!discoverFeed || !searchInput || !categoryFilter) return;
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const category = categoryFilter.value;
+        const filteredTales = allTales.filter(tale => {
+            const matchesCategory = !category || tale.category === category;
+            const matchesSearch = !searchTerm || (
+                (tale.title && tale.title.toLowerCase().includes(searchTerm)) ||
+                (tale.description && tale.description.toLowerCase().includes(searchTerm)) ||
+                (tale.profiles?.full_name && tale.profiles.full_name.toLowerCase().includes(searchTerm)) ||
+                (tale.tags && tale.tags.toLowerCase().includes(searchTerm))
+            );
+            return matchesCategory && matchesSearch;
+        });
+        displayTales(filteredTales);
+    }
+
+    /**
+     * Renders an array of tales to the feed container.
+     */
+    function displayTales(tales) {
+         // ... (This function remains the same as before) ...
+         if (!discoverFeed) return;
+         discoverFeed.innerHTML = '';
+         if (tales.length === 0) {
+            if(noResultsMessage) noResultsMessage.classList.remove('hidden');
+         } else {
+            if(noResultsMessage) noResultsMessage.classList.add('hidden');
+             tales.forEach(tale => {
+                 const taleCard = createDiscoverFeedCard(tale);
+                 discoverFeed.insertAdjacentHTML('beforeend', taleCard);
+             });
+         }
+    }
+
+
+    /**
+     * Creates the HTML string for a single tale card (dashboard style).
+     * Now includes functional like button if user is logged in.
+     */
+    function createDiscoverFeedCard(tale) {
+        // ... (Author Name, Avatar, Post Date calculation remains the same) ...
         const authorName = tale.profiles?.full_name || 'A Gitamite';
-        const authorAvatar = tale.profiles?.avatar_url ? `${tale.profiles.avatar_url}?t=${new Date().getTime()}`: `https://placehold.co/40x40/e0e7ff/3730a3?text=${authorName.charAt(0).toUpperCase()}`;
-        const postDate = new Date(tale.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        const authorAvatar = tale.profiles?.avatar_url ? `${tale.profiles.avatar_url}?t=${new Date().getTime()}` : `https://placehold.co/40x40/e0e7ff/3730a3?text=${authorName.charAt(0).toUpperCase()}`;
+        let postDate = 'a while ago';
+        try { if (typeof dateFns !== 'undefined') { postDate = dateFns.formatDistanceToNow(new Date(tale.created_at), { addSuffix: true }); } else { postDate = new Date(tale.created_at).toLocaleDateString(); }} catch(e){}
+
+        const coverImageHTML = tale.cover_image_url ? `<img src="${tale.cover_image_url}" alt="Cover for ${tale.title}" class="w-full h-auto max-h-96 object-cover rounded-md my-4 border border-gray-100">` : '';
+
+        // --- UPDATED Like/Comment Display ---
+        let likeButtonHTML = '';
+        if (user) { // Only show functional button if logged in
+            const likeButtonClass = tale.user_has_liked ? 'text-red-500 fill-current' : 'text-gray-600';
+            likeButtonHTML = `<button data-tale-id="${tale.id}" data-liked="${tale.user_has_liked}" class="like-button ${likeButtonClass} hover:text-red-500 flex items-center gap-1 transition-colors"><svg class="w-5 h-5 pointer-events-none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg> <span class="like-count text-sm">${tale.like_count || 0}</span></button>`;
+        } else { // Show non-interactive count if logged out
+            likeButtonHTML = `<span class="text-gray-500 flex items-center gap-1 text-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg> ${tale.like_count || 0}</span>`;
+        }
+        // Comment button is still non-interactive for now
+        const commentButtonHTML = `<button class="text-gray-600 hover:text-blue-500 flex items-center gap-1 transition-colors"><svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg> <span class="text-sm">0</span></button>`;
 
         return `
-            <div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6 overflow-hidden">
+            <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
                 <div class="p-6">
-                    <div class="flex items-center mb-4">
-                        <img src="${authorAvatar}" alt="User Avatar" class="w-10 h-10 rounded-full mr-3">
-                        <div>
-                            <h4 class="font-bold text-gray-900">${authorName}</h4>
-                            <p class="text-sm text-gray-500">Posted in <a href="#" class="font-semibold text-[#007367] hover:underline">${tale.category}</a> &middot; ${postDate}</p>
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex items-center flex-grow min-w-0 mr-4">
+                            <img src="${authorAvatar}" alt="${authorName}'s Avatar" class="w-10 h-10 rounded-full mr-3 flex-shrink-0 shadow-sm">
+                            <div class="min-w-0">
+                                <h4 class="font-bold text-gray-900 truncate">${authorName}</h4>
+                                <p class="text-sm text-gray-500 truncate">Posted in <span class="font-semibold text-[#007367]">${tale.category}</span> &middot; ${postDate}</p>
+                            </div>
                         </div>
+                        {/* Placeholder for bookmark, etc. */}
                     </div>
-                    <h3 class="text-xl font-semibold mb-2 text-gray-800">${tale.title}</h3>
-                    <p class="text-gray-700 mb-4">${tale.description}</p>
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">${tale.title}</h3>
+                    ${coverImageHTML}
+                    <div class="prose prose-sm max-w-none text-gray-700 break-words mt-4">${tale.description || ''}</div>
                 </div>
-                <div class="p-4 border-t border-gray-100 flex justify-between items-center">
-                    <div class="flex gap-4">
-                        <span class="text-gray-600 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg> ${tale.like_count || 0}</span>
-                        <span class="text-gray-600 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg> ${tale.comment_count || 0}</span>
-                    </div>
+                <div class="p-4 bg-gray-50 border-t border-gray-100 flex justify-start items-center gap-4">
+                    ${likeButtonHTML}
+                    ${commentButtonHTML}
                 </div>
             </div>
         `;
     }
 
-    // Initial load
-    loadAllTales();
-});
+    /**
+     * Generates skeleton loader HTML.
+     */
+    function createSkeletonLoaders(count = 3) {
+        // ... (This function remains the same) ...
+        let skeletons = '';
+        for (let i = 0; i < count; i++) { skeletons += `<div class="bg-white rounded-xl shadow-md border border-gray-200 p-6 animate-pulse space-y-4"><div class="flex items-center"><div class="w-10 h-10 rounded-full bg-gray-300 mr-3"></div><div><div class="h-4 w-32 bg-gray-300 rounded mb-1"></div><div class="h-3 w-48 bg-gray-300 rounded"></div></div></div><div class="h-6 w-3/4 bg-gray-300 rounded"></div><div class="space-y-2"><div class="h-4 w-full bg-gray-300 rounded"></div><div class="h-4 w-5/6 bg-gray-300 rounded"></div></div><div class="w-full h-48 bg-gray-300 mt-4 rounded-lg"></div></div>`; }
+        return skeletons;
+    }
+
+
+    // --- Event Listeners for Filters ---
+    searchInput?.addEventListener('input', filterAndDisplayTales);
+    categoryFilter?.addEventListener('change', filterAndDisplayTales);
+
+    // --- ADDED: Event Listener for Like Buttons (only if user logged in) ---
+    if (user && discoverFeed) {
+        discoverFeed.addEventListener('click', async (event) => {
+            const likeButton = event.target.closest('.like-button');
+            if (likeButton) {
+                const taleId = likeButton.dataset.taleId;
+                const isLiked = likeButton.dataset.liked === 'true';
+                const likeCountElement = likeButton.querySelector('.like-count');
+                if (!taleId || !likeCountElement) return;
+                let currentLikes = parseInt(likeCountElement.textContent || '0');
+
+                if (likeButton.disabled) return;
+                likeButton.disabled = true;
+
+                if (isLiked) {
+                    likeButton.dataset.liked = 'false';
+                    likeButton.classList.remove('text-red-500', 'fill-current');
+                    likeCountElement.textContent = Math.max(0, currentLikes - 1);
+                    supabaseClient.from('likes').delete().match({ user_id: user.id, tale_id: taleId })
+                        .then(({ error }) => { if (error) console.error("Error unliking:", error); })
+                        .finally(() => { likeButton.disabled = false; });
+                } else {
+                    likeButton.dataset.liked = 'true';
+                    likeButton.classList.add('text-red-500', 'fill-current');
+                    likeCountElement.textContent = currentLikes + 1;
+                    supabaseClient.from('likes').insert({ user_id: user.id, tale_id: taleId })
+                       .then(({ error }) => { if (error) console.error("Error liking:", error); })
+                       .finally(() => { likeButton.disabled = false; });
+                }
+            }
+        });
+    }
+
+    // --- Initial Load ---
+    fetchPublicTales();
+
+}); // End DOMContentLoaded
