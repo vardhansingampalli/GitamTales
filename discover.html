@@ -8,103 +8,39 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- date-fns Script (needed for relative dates if used) -->
-    <script src="https://cdn.jsdelivr.net/npm/date-fns@3.6.0/cdn.min.js"></script>
-    <link rel="stylesheet" href="css/style.css"> <!-- Make sure path is correct -->
+    <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-client.js"></script> <!-- Make sure path is correct -->
+    <script src="js/supabase-client.js"></script>
 </head>
 <body class="bg-gray-50">
 
-    <header class="bg-white shadow-sm sticky top-0 z-50 border-b border-gray-100">
+    <header class="bg-white shadow-sm sticky top-0 z-50">
         <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
             <a href="index.html" class="text-2xl font-bold text-[#007367]">GitamTales</a>
-             <div>
-                <a href="login.html" class="text-gray-600 hover:text-[#007367] mr-4">Log In</a>
-                <a href="signup.html" class="bg-[#007367] hover:bg-[#005f56] text-white font-semibold py-2 px-4 rounded-lg text-sm">Sign Up</a>
-             </div>
         </nav>
     </header>
 
     <main class="container mx-auto px-6 py-10">
-        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2 text-center">Discover Journeys</h1>
-        <p class="text-gray-600 mb-8 text-center max-w-2xl mx-auto">Explore projects, achievements, and stories from the GitamTales community.</p>
+        <div class="max-w-3xl mx-auto">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Discover All Journeys</h1>
+            <p class="text-gray-600 mb-8">Explore every project, achievement, and story from the GitamTales community.</p>
 
-        <!-- Filter and Search Controls -->
-        <div class="mb-8 p-4 bg-white border border-gray-200 rounded-xl flex flex-col md:flex-row gap-4 items-center shadow-sm">
-            <input type="search" id="search-input" placeholder="Search by keyword, name, skill..." class="w-full md:flex-1 bg-gray-100 border-gray-200 rounded-lg px-4 py-3 focus:ring-[#007367] focus:border-[#007367]">
-            <select id="category-filter" class="w-full md:w-48 bg-gray-100 border-gray-200 rounded-lg px-4 py-3 focus:ring-[#007367] focus:border-[#007367]">
-                <option value="">All Categories</option>
-                <option>Projects</option>
-                <option>Academics</option>
-                <option>Achievements</option>
-                <option>Leadership & Events</option>
-                <option>Research & Papers</option>
-                <option>Reflections</option>
-            </select>
-        </div>
-
-        <!-- Tales Grid -->
-        <div id="discover-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Skeleton Loader Card (Repeat 2-3 times) -->
-            <div class="bg-white rounded-lg overflow-hidden border border-gray-200 animate-pulse">
-                <div class="w-full h-48 bg-gray-300"></div>
-                <div class="p-6">
-                    <div class="h-4 w-1/4 rounded-md bg-gray-300 mb-2"></div>
-                    <div class="h-6 w-3/4 rounded-md bg-gray-300 mb-4"></div>
-                    <div class="flex items-center">
+            <div id="discover-feed">
+                <div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6 p-6 animate-pulse">
+                    <div class="flex items-center mb-4">
                         <div class="w-10 h-10 rounded-full bg-gray-300 mr-3"></div>
                         <div>
-                            <div class="h-4 w-24 rounded-md bg-gray-300"></div>
-                            <div class="h-3 w-16 rounded-md bg-gray-300 mt-1"></div>
+                            <div class="h-4 w-32 bg-gray-300 rounded"></div>
+                            <div class="h-3 w-48 bg-gray-300 rounded mt-2"></div>
                         </div>
                     </div>
+                    <div class="h-6 w-3/4 bg-gray-300 rounded mb-2"></div>
+                    <div class="h-4 w-full bg-gray-300 rounded mt-2"></div>
                 </div>
             </div>
-             <div class="bg-white rounded-lg overflow-hidden border border-gray-200 animate-pulse hidden md:block">
-                 <div class="w-full h-48 bg-gray-300"></div>
-                 <div class="p-6">
-                     <div class="h-4 w-1/4 rounded-md bg-gray-300 mb-2"></div>
-                     <div class="h-6 w-3/4 rounded-md bg-gray-300 mb-4"></div>
-                     <div class="flex items-center">
-                         <div class="w-10 h-10 rounded-full bg-gray-300 mr-3"></div>
-                         <div>
-                             <div class="h-4 w-24 rounded-md bg-gray-300"></div>
-                             <div class="h-3 w-16 rounded-md bg-gray-300 mt-1"></div>
-                         </div>
-                     </div>
-                 </div>
-             </div>
-              <div class="bg-white rounded-lg overflow-hidden border border-gray-200 animate-pulse hidden lg:block">
-                 <div class="w-full h-48 bg-gray-300"></div>
-                  <div class="p-6">
-                     <div class="h-4 w-1/4 rounded-md bg-gray-300 mb-2"></div>
-                     <div class="h-6 w-3/4 rounded-md bg-gray-300 mb-4"></div>
-                     <div class="flex items-center">
-                         <div class="w-10 h-10 rounded-full bg-gray-300 mr-3"></div>
-                         <div>
-                             <div class="h-4 w-24 rounded-md bg-gray-300"></div>
-                             <div class="h-3 w-16 rounded-md bg-gray-300 mt-1"></div>
-                         </div>
-                     </div>
-                 </div>
-             </div>
         </div>
-        <div id="no-results-message" class="hidden text-center text-gray-500 mt-8">
-            No journeys found matching your criteria.
-        </div>
-
     </main>
 
-    <!-- Optional Footer
-    <footer class="bg-gray-800 text-gray-300 mt-12">
-        <div class="container mx-auto px-6 py-4 text-center">
-             &copy; 2025 GitamTales. All rights reserved.
-        </div>
-    </footer>
-    -->
-
-    <script src="js/discover.js"></script> <!-- Make sure path is correct -->
+    <script src="js/discover.js"></script>
 </body>
 </html>
-
