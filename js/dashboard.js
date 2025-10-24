@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <h3 class="font-bold text-gray-800 mb-3 text-sm uppercase tracking-wider">Skills</h3>
                     <div class="flex flex-wrap gap-2">
                         <span class="bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full">Example Skill</span>
-                        {/* Fetch real skills later */}
+                        
                     </div>
                  `;
             } else { console.error("Sidebar skills content container not found!"); }
