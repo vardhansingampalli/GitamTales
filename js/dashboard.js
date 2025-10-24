@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Provide a fallback or stop execution if date formatting is critical
     }
 
+
     // --- Auth Guard ---
     let user;
     try {
@@ -68,8 +69,8 @@ document.addEventListener('DOMContentLoaded', async () => {
      * Loads the user's profile information and updates the UI, replacing skeletons.
      */
     async function loadUserProfile() {
-         // ... (This function remains unchanged from the previous correct version) ...
-         try {
+        if (!user) return; // Don't run if user isn't defined
+        try {
             const { data: profile, error } = await supabaseClient.from('profiles').select('full_name, branch, bio, avatar_url').eq('id', user.id).single();
             if (error && error.code !== 'PGRST116') throw error; // Allow "No row found"
 
@@ -121,74 +122,57 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <h3 class="font-bold text-gray-800 mb-3 text-sm uppercase tracking-wider">Skills</h3>
                     <div class="flex flex-wrap gap-2">
                         <span class="bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full">Example Skill</span>
-                        
+                        {/* Fetch real skills later */}
                     </div>
                  `;
             } else { console.error("Sidebar skills content container not found!"); }
 
         } catch (error) {
             console.error('Error loading user profile:', error);
+            // Provide fallback UI in case of error
             if (sidebarProfileContent) sidebarProfileContent.innerHTML = '<p class="text-red-500 text-center">Error loading profile.</p>';
         }
     }
 
     /**
-     * Loads the user's tales, likes, and comments, then renders them.
+     * Loads the user's tales, calculates likes, and renders them to the feed.
      */
     async function loadTales() {
-        if (!timelineFeed || !user) return;
+        if (!timelineFeed || !user) return; // Exit if feed element or user doesn't exist
 
         try {
-            // Fetch Tales
             const { data: tales, error: talesError } = await supabaseClient.from('tales').select(`*, profiles ( full_name, avatar_url )`).eq('user_id', user.id).order('created_at', { ascending: false });
             if (talesError) throw talesError;
 
             const taleIds = tales.map(t => t.id);
             let likes = [];
-            let comments = [];
             let totalLikesReceived = 0;
 
-            // Fetch Likes and Comments in parallel if tales exist
             if (taleIds.length > 0) {
-                const [likesResult, commentsResult] = await Promise.all([
-                    supabaseClient.from('likes').select('tale_id, user_id').in('tale_id', taleIds),
-                    // Fetch comments WITH the commenter's profile info
-                    supabaseClient.from('comments').select(`*, profiles ( full_name, avatar_url )`).in('tale_id', taleIds).order('created_at', { ascending: true }) // Show oldest comments first
-                ]);
-
-                if (likesResult.error) console.error('Error fetching likes:', likesResult.error);
-                else likes = likesResult.data || [];
-
-                if (commentsResult.error) console.error('Error fetching comments:', commentsResult.error);
-                else comments = commentsResult.data || [];
+                const { data: likesData, error: likesError } = await supabaseClient.from('likes').select('tale_id, user_id').in('tale_id', taleIds);
+                if (likesError) console.error('Error fetching likes:', likesError); // Log but continue
+                else likes = likesData || [];
             }
 
-            // Update Sidebar Counts
             if(talesCountElement) talesCountElement.textContent = tales.length;
-
-            // Clear Feed
+            // Clear only tale cards, preserve the "Add Tale" bar if it's inside timelineFeed
             timelineFeed.querySelectorAll('.tale-card').forEach(card => card.remove());
 
-            // Render Feed
             if (tales.length === 0) {
+                // Check if the empty message already exists to prevent duplicates
                 if (!timelineFeed.querySelector('.empty-tales-message')) {
                      timelineFeed.insertAdjacentHTML('beforeend', '<p class="text-center text-gray-500 tale-card empty-tales-message">You haven\'t posted any tales yet.</p>');
                 }
             } else {
+                 // Remove empty message if it exists
                  const emptyMsg = timelineFeed.querySelector('.empty-tales-message');
                  if (emptyMsg) emptyMsg.remove();
 
                 for (const tale of tales) {
-                    // Attach relevant likes and comments to each tale object
                     const taleLikes = likes.filter(l => l.tale_id === tale.id);
-                    const taleComments = comments.filter(c => c.tale_id === tale.id);
-
                     tale.like_count = taleLikes.length;
                     totalLikesReceived += tale.like_count;
                     tale.user_has_liked = taleLikes.some(l => l.user_id === user.id);
-                    tale.comments = taleComments; // Add comments array to the tale object
-                    tale.comment_count = taleComments.length; // Add comment count
-
                     timelineFeed.insertAdjacentHTML('beforeend', createTaleCard(tale));
                 }
             }
@@ -196,255 +180,261 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         } catch (error) {
             console.error('Error loading tales:', error);
-            timelineFeed.innerHTML = '<p class="text-red-500 text-center tale-card">Error loading tales.</p>';
+            // Clear feed and show error
+            timelineFeed.querySelectorAll('.tale-card').forEach(card => card.remove()); // Clear potentially partial list
+            timelineFeed.insertAdjacentHTML('beforeend', '<p class="text-red-500 text-center tale-card">Error loading tales.</p>');
         }
     }
 
      /**
-     * Creates the HTML string for a single tale card, including comments.
+     * Creates the HTML string for a single tale card.
+     * Includes Edit/Delete icons and Like button functionality.
      */
     function createTaleCard(tale) {
-        if (!user) return '';
+        if (!user) return ''; // Need user to determine ownership
 
         const authorName = tale.profiles?.full_name || 'A Gitamite';
         const authorAvatar = tale.profiles?.avatar_url ? `${tale.profiles.avatar_url}?t=${new Date().getTime()}` : `https://placehold.co/40x40/e0e7ff/3730a3?text=${authorName.charAt(0).toUpperCase()}`;
-        let postDate = 'a while ago';
+        let postDate = 'a while ago'; // Fallback
         try {
-             if (typeof dateFns !== 'undefined') { postDate = dateFns.formatDistanceToNow(new Date(tale.created_at), { addSuffix: true }); }
-             else { postDate = new Date(tale.created_at).toLocaleDateString(); }
-        } catch(e){}
+             // Check if dateFns is loaded globally
+             if (typeof dateFns !== 'undefined' && dateFns.formatDistanceToNow) {
+                 postDate = dateFns.formatDistanceToNow(new Date(tale.created_at), { addSuffix: true });
+             } else {
+                 postDate = new Date(tale.created_at).toLocaleDateString(); // Fallback date format
+                 if (typeof dateFns === 'undefined') console.warn("date-fns library not found, using basic date format.");
+             }
+        } catch(e){ console.warn("Could not format date:", tale.created_at, e); }
 
         const isOwner = tale.user_id === user.id;
-        const ownerControls = isOwner ? `...` : ''; // Same as before
-        const coverImageHTML = tale.cover_image_url ? `...` : ''; // Same as before
+        const ownerControls = isOwner ? `
+            <div class="flex items-center space-x-2">
+                <button data-tale-id="${tale.id}" class="edit-button text-gray-400 hover:text-blue-500 p-1 rounded-full transition-colors" title="Edit Tale">
+                    <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                </button>
+                <button data-tale-id="${tale.id}" class="delete-button text-gray-400 hover:text-red-500 p-1 rounded-full transition-colors" title="Delete Tale">
+                    <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+            </div>
+        ` : '';
+        const coverImageHTML = tale.cover_image_url ? `<img src="${tale.cover_image_url}" alt="Cover for ${tale.title}" class="w-full h-auto max-h-96 object-cover border-y border-gray-100 my-4">` : '';
         const likeButtonClass = tale.user_has_liked ? 'text-red-500 fill-current' : 'text-gray-600';
-        const likeButtonHTML = `<button ...> <span class="like-count text-sm">${tale.like_count || 0}</span></button>`; // Same as before
+        const likeButtonHTML = `<button data-tale-id="${tale.id}" data-liked="${tale.user_has_liked}" class="like-button ${likeButtonClass} hover:text-red-500 flex items-center gap-1 transition-colors"><svg class="w-5 h-5 pointer-events-none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg> <span class="like-count text-sm">${tale.like_count || 0}</span></button>`;
+        const commentButtonHTML = `<button class="text-gray-600 hover:text-blue-500 flex items-center gap-1 transition-colors"><svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg> <span class="text-sm">0</span></button>`; // Using 0 for comments
 
-        // --- NEW: Comment Button with Count ---
-        const commentButtonHTML = `<button class="text-gray-600 hover:text-blue-500 flex items-center gap-1 transition-colors"><svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg> <span class="comment-count text-sm">${tale.comment_count || 0}</span></button>`;
-
-        // --- NEW: Generate HTML for each comment ---
-        let commentsHTML = '';
-        if (tale.comments && tale.comments.length > 0) {
-            commentsHTML = tale.comments.map(comment => {
-                 const commenterName = comment.profiles?.full_name || 'User';
-                 const commenterAvatar = comment.profiles?.avatar_url ? `${comment.profiles.avatar_url}?t=${new Date().getTime()}` : `https://placehold.co/32x32/e0e7ff/3730a3?text=${commenterName.charAt(0).toUpperCase()}`;
-                 let commentDate = 'earlier';
-                 try { if (typeof dateFns !== 'undefined') { commentDate = dateFns.formatDistanceToNow(new Date(comment.created_at), { addSuffix: true }); } } catch(e){}
-                 const canDelete = comment.user_id === user.id; // Check if current user owns the comment
-
-                 return `
-                    <div class="comment-item flex items-start space-x-3 py-3" id="comment-${comment.id}">
-                        <img src="${commenterAvatar}" alt="${commenterName}'s avatar" class="w-8 h-8 rounded-full flex-shrink-0 mt-1">
-                        <div class="flex-grow">
-                            <div class="bg-gray-100 rounded-lg px-3 py-2">
-                                <span class="font-semibold text-sm text-gray-800">${commenterName}</span>
-                                <p class="text-sm text-gray-700">${comment.content}</p>
-                            </div>
-                            <div class="text-xs text-gray-500 mt-1 flex items-center space-x-2">
-                                <span>${commentDate}</span>
-                                ${canDelete ? `<button data-comment-id="${comment.id}" class="delete-comment-button text-red-500 hover:text-red-700 text-xs font-medium">Delete</button>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                 `;
-            }).join('');
-        }
-
-        // --- NEW: Comment Input Form ---
-        const commentFormHTML = `
-            <div class="mt-4 flex items-center space-x-3 pt-4 border-t border-gray-100">
-                <img src="${authorAvatar}" alt="Your avatar" class="w-8 h-8 rounded-full flex-shrink-0"> 
-                <form class="comment-form flex-grow" data-tale-id="${tale.id}">
-                    <input type="text" name="comment_content" class="w-full bg-gray-100 border-gray-200 rounded-full px-4 py-2 text-sm focus:ring-[#007367] focus:border-[#007367]" placeholder="Write a comment..." required>
-                    
-                     <button type="submit" class="hidden">Post</button>
-                </form>
-            </div>
-        `;
-
-        // Assemble the full card
-        return `
-            <div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6 overflow-hidden tale-card" id="tale-${tale.id}">
-                
-                 <div class="p-6">
-                     <div class="flex justify-between items-start mb-4">
-                         <div class="flex items-center flex-grow min-w-0 mr-4">
-                             <img src="${authorAvatar}" alt="${authorName}'s Avatar" class="w-10 h-10 rounded-full mr-3 flex-shrink-0">
-                             <div class="min-w-0">
-                                 <h4 class="font-bold text-gray-900 truncate">${authorName}</h4>
-                                 <p class="text-sm text-gray-500 truncate">Posted in <a href="#" class="font-semibold text-[#007367] hover:underline">${tale.category}</a> &middot; ${postDate}</p>
-                             </div>
-                         </div>
-                         <div class="flex-shrink-0">${ownerControls}</div>
-                     </div>
-                     <h3 class="text-xl font-semibold mb-2 text-gray-800">${tale.title}</h3>
-                     <div class="prose prose-sm max-w-none text-gray-700 break-words">${tale.description || ''}</div>
-                 </div>
-                 ${coverImageHTML}
-                
-                <div class="p-4 flex justify-between items-center border-t border-gray-100">
-                    <div class="flex gap-4">
-                        ${likeButtonHTML}
-                        ${commentButtonHTML}
-                    </div>
-                </div>
-               
-                <div class="px-6 pb-4">
-                    <div class="comments-list border-t border-gray-100 pt-3 max-h-60 overflow-y-auto">
-                        ${commentsHTML || '<p class="text-xs text-gray-500 text-center py-2">No comments yet.</p>'}
-                    </div>
-                    ${commentFormHTML}
-                </div>
-            </div>
-        `;
+        return `<div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6 overflow-hidden tale-card" id="tale-${tale.id}"><div class="p-6"><div class="flex justify-between items-start mb-4"><div class="flex items-center flex-grow min-w-0 mr-4"><img src="${authorAvatar}" alt="${authorName}'s Avatar" class="w-10 h-10 rounded-full mr-3 flex-shrink-0"> <div class="min-w-0"><h4 class="font-bold text-gray-900 truncate">${authorName}</h4><p class="text-sm text-gray-500 truncate">Posted in <a href="#" class="font-semibold text-[#007367] hover:underline">${tale.category}</a> &middot; ${postDate}</p></div></div><div class="flex-shrink-0">${ownerControls}</div></div><h3 class="text-xl font-semibold mb-2 text-gray-800">${tale.title}</h3><div class="prose prose-sm max-w-none text-gray-700 break-words">${tale.description || ''}</div></div>${coverImageHTML}<div class="p-4 flex justify-between items-center border-t border-gray-100"><div class="flex gap-4">${likeButtonHTML}${commentButtonHTML}</div></div></div>`;
     }
 
     // --- Initial Load ---
-    try { await Promise.all([loadUserProfile(), loadTales()]); }
-    catch (error) { console.error("Error during initial page load:", error); }
+    // Use try...catch for initial load in case of errors
+    try {
+        await Promise.all([loadUserProfile(), loadTales()]);
+    } catch (error) {
+        console.error("Error during initial page load:", error);
+         // Show a generic error message if initial load fails
+         if(timelineFeed) timelineFeed.innerHTML = '<p class="text-red-500 text-center">Failed to load dashboard content.</p>';
+         else document.body.insertAdjacentHTML('beforeend', '<p class="text-red-500 text-center p-8">Failed to load dashboard content.</p>');
+    }
 
     // --- Event Listeners ---
 
     profileMenuButton?.addEventListener('click', () => profileMenu?.classList.toggle('hidden'));
-    document.addEventListener('click', (event) => { /* ... (Close menu logic) ... */ });
-    logoutButton?.addEventListener('click', async (e) => { /* ... (Logout logic) ... */ });
-    addTaleButton?.addEventListener('click', () => { /* ... (Open Create Modal logic) ... */ });
-    closeModalButton?.addEventListener('click', () => addTaleModal?.classList.add('hidden'));
-    addTaleModal?.addEventListener('click', (event) => { /* ... (Close modal on overlay click) ... */ });
+    document.addEventListener('click', (event) => {
+        // Close profile menu if clicking outside of it or its button
+        if (profileMenu && !profileMenu.classList.contains('hidden') && profileMenuButton && !profileMenuButton.contains(event.target) && !profileMenu.contains(event.target)) {
+             profileMenu.classList.add('hidden');
+        }
+    });
+    logoutButton?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const { error } = await supabaseClient.auth.signOut();
+        if (error) console.error("Logout error:", error);
+        window.location.href = 'index.html';
+    });
 
-    // --- UPDATED Event Delegation for Timeline ---
+    addTaleButton?.addEventListener('click', () => {
+        if (!addTaleModal || !taleForm || !quill || !submitTaleButton) {
+             console.error("Modal elements not found for Add Tale button");
+             return;
+        }
+        taleForm.reset();
+        quill.setText(''); // Clear Quill editor
+        const modalTitle = addTaleModal.querySelector('h3');
+        if (modalTitle) modalTitle.textContent = 'Create a New Tale';
+        submitTaleButton.textContent = 'Post Tale';
+        submitTaleButton.disabled = false; // Ensure button is enabled
+        const editIdInput = document.getElementById('edit-tale-id');
+        if (editIdInput) editIdInput.value = ''; // Clear edit ID
+        addTaleModal.classList.remove('hidden');
+    });
+
+    closeModalButton?.addEventListener('click', () => addTaleModal?.classList.add('hidden'));
+    addTaleModal?.addEventListener('click', (event) => {
+        // Close if clicking on the background overlay
+        if (event.target === addTaleModal) addTaleModal.classList.add('hidden');
+    });
+
+    // Event Delegation for Edit, Delete, Like buttons
     timelineFeed?.addEventListener('click', async (event) => {
         const editButton = event.target.closest('.edit-button');
         const deleteButton = event.target.closest('.delete-button');
         const likeButton = event.target.closest('.like-button');
-        const deleteCommentButton = event.target.closest('.delete-comment-button'); // NEW
 
         // Handle Edit Click
-        if (editButton) { /* ... (Existing Edit Logic) ... */ }
+        if (editButton) {
+             const taleId = editButton.dataset.taleId;
+             if (!taleId || !taleForm || !addTaleModal || !quill || !submitTaleButton) return;
+             try {
+                 const { data: tale, error } = await supabaseClient.from('tales').select('*').eq('id', taleId).single();
+                 if (error || !tale) throw error || new Error("Tale not found");
 
-        // Handle Delete Tale Click
-        if (deleteButton) { /* ... (Existing Delete Tale Logic) ... */ }
+                 taleForm.querySelector('#tale-category').value = tale.category || '';
+                 taleForm.querySelector('#tale-title').value = tale.title || '';
+                 const eventDateInput = taleForm.querySelector('#event-date');
+                 const createdAtInput = taleForm.querySelector('#created-at-date');
+                 // Format dates carefully, adjusting for timezone for datetime-local
+                 if(eventDateInput && tale.event_date) try { const d = new Date(tale.event_date); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); eventDateInput.value = d.toISOString().slice(0,16); } catch(e){ eventDateInput.value = ''; console.warn("Could not parse event_date for edit:", tale.event_date); } else if(eventDateInput) eventDateInput.value = '';
+                 if(createdAtInput && tale.created_at) try { const d = new Date(tale.created_at); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); createdAtInput.value = d.toISOString().slice(0,16); } catch(e){ createdAtInput.value = ''; console.warn("Could not parse created_at for edit:", tale.created_at);} else if(createdAtInput) createdAtInput.value = '';
+
+                 quill.root.innerHTML = tale.description || '';
+                 taleForm.querySelector('#tale-tags').value = tale.tags || '';
+                 taleForm.querySelector('#edit-tale-id').value = tale.id;
+
+                 addTaleModal.querySelector('h3').textContent = 'Edit Tale';
+                 submitTaleButton.textContent = 'Save Changes';
+                 submitTaleButton.disabled = false; // Ensure button is enabled
+                 addTaleModal.classList.remove('hidden');
+             } catch (error) {
+                 console.error('Error fetching tale for edit:', error);
+                 alert('Could not load tale for editing.');
+             }
+        }
+
+        // Handle Delete Click
+        if (deleteButton) {
+            const taleId = deleteButton.dataset.taleId;
+            if (!taleId) return;
+            if (confirm('Are you sure you want to delete this tale? This action cannot be undone.')) {
+                 try {
+                     // Delete likes first
+                     await supabaseClient.from('likes').delete().eq('tale_id', taleId);
+                     // Then delete the tale
+                     const { error } = await supabaseClient.from('tales').delete().eq('id', taleId);
+                     if (error) throw error;
+                     await loadTales(); // Reload tales on success
+                 } catch (error) {
+                     console.error('Error deleting tale:', error);
+                     alert('Failed to delete tale.');
+                 }
+            }
+        }
 
         // Handle Like Click
-        if (likeButton) { /* ... (Existing Like/Unlike Logic) ... */ }
+        if (likeButton) {
+            const taleId = likeButton.dataset.taleId;
+            const isLiked = likeButton.dataset.liked === 'true';
+            const likeCountElement = likeButton.querySelector('.like-count');
+            if (!taleId || !likeCountElement) return;
+            let currentLikes = parseInt(likeCountElement.textContent || '0');
 
-        // --- NEW: Handle Delete Comment Click ---
-        if (deleteCommentButton) {
-            const commentId = deleteCommentButton.dataset.commentId;
-            if (!commentId) return;
+            // Prevent multiple clicks while processing
+            if (likeButton.disabled) return;
+            likeButton.disabled = true;
 
-            if (confirm('Are you sure you want to delete this comment?')) {
-                try {
-                    const { error } = await supabaseClient.from('comments').delete().eq('id', commentId);
-                    if (error) throw error;
-
-                    // Remove comment from UI immediately
-                    document.getElementById(`comment-${commentId}`)?.remove();
-                    // Optionally, find the parent tale card and update the comment count display
-                    const taleCard = deleteCommentButton.closest('.tale-card');
-                    if (taleCard) {
-                        const countSpan = taleCard.querySelector('.comment-count');
-                        if (countSpan) {
-                            countSpan.textContent = Math.max(0, parseInt(countSpan.textContent || '1') - 1);
-                        }
-                    }
-
-                } catch (error) {
-                    console.error('Error deleting comment:', error);
-                    alert('Failed to delete comment.');
-                }
+            // Optimistic UI update
+            if (isLiked) {
+                likeButton.dataset.liked = 'false';
+                likeButton.classList.remove('text-red-500', 'fill-current');
+                likeCountElement.textContent = Math.max(0, currentLikes - 1); // Prevent negative likes
+                // Send unlike request to DB
+                supabaseClient.from('likes').delete().match({ user_id: user.id, tale_id: taleId })
+                    .then(({ error }) => { if (error) console.error("Error unliking:", error); })
+                    .finally(() => { likeButton.disabled = false; }); // Re-enable button
+            } else {
+                likeButton.dataset.liked = 'true';
+                likeButton.classList.add('text-red-500', 'fill-current');
+                likeCountElement.textContent = currentLikes + 1;
+                // Send like request to DB
+                supabaseClient.from('likes').insert({ user_id: user.id, tale_id: taleId })
+                   .then(({ error }) => { if (error) console.error("Error liking:", error); })
+                   .finally(() => { likeButton.disabled = false; }); // Re-enable button
             }
         }
     });
 
-     // --- NEW: Event Listener for Comment Form Submissions ---
-    timelineFeed?.addEventListener('submit', async (event) => {
-         // Check if the submission came from a comment form
-         if (event.target.classList.contains('comment-form')) {
-             event.preventDefault(); // Prevent default form submission
-             const form = event.target;
-             const taleId = form.dataset.taleId;
-             const input = form.querySelector('input[name="comment_content"]');
-             const content = input?.value.trim();
-
-             if (!content || !taleId || !user) {
-                 console.warn("Comment content, tale ID, or user missing.");
-                 return; // Don't submit empty comments
-             }
-
-             // Disable input while submitting
-             if(input) input.disabled = true;
-
-             try {
-                 // Insert the comment into the database
-                 const { data: newComment, error } = await supabaseClient
-                     .from('comments')
-                     .insert({
-                         user_id: user.id,
-                         tale_id: taleId,
-                         content: content
-                     })
-                     .select(`*, profiles ( full_name, avatar_url )`) // Fetch profile info for the new comment
-                     .single();
-
-                 if (error) throw error;
-
-                 // Successfully inserted! Now add it to the UI.
-                 if (newComment) {
-                     const commentList = form.closest('.tale-card')?.querySelector('.comments-list');
-                     const noCommentsMsg = commentList?.querySelector('p.text-xs');
-
-                     // Create HTML for the new comment
-                     const commenterName = newComment.profiles?.full_name || 'User';
-                     const commenterAvatar = newComment.profiles?.avatar_url ? `${newComment.profiles.avatar_url}?t=${new Date().getTime()}` : `https://placehold.co/32x32/e0e7ff/3730a3?text=${commenterName.charAt(0).toUpperCase()}`;
-                     let commentDate = 'just now';
-                      try { if (typeof dateFns !== 'undefined') { commentDate = dateFns.formatDistanceToNow(new Date(newComment.created_at), { addSuffix: true }); } } catch(e){}
-
-                     const newCommentHTML = `
-                         <div class="comment-item flex items-start space-x-3 py-3" id="comment-${newComment.id}">
-                             <img src="${commenterAvatar}" alt="${commenterName}'s avatar" class="w-8 h-8 rounded-full flex-shrink-0 mt-1">
-                             <div class="flex-grow">
-                                 <div class="bg-gray-100 rounded-lg px-3 py-2">
-                                     <span class="font-semibold text-sm text-gray-800">${commenterName}</span>
-                                     <p class="text-sm text-gray-700">${newComment.content}</p>
-                                 </div>
-                                 <div class="text-xs text-gray-500 mt-1 flex items-center space-x-2">
-                                     <span>${commentDate}</span>
-                                     <button data-comment-id="${newComment.id}" class="delete-comment-button text-red-500 hover:text-red-700 text-xs font-medium">Delete</button>
-                                 </div>
-                             </div>
-                         </div>
-                     `;
-
-                     // Remove "No comments yet" message if it exists
-                     if (noCommentsMsg) noCommentsMsg.remove();
-                     // Append the new comment
-                     commentList?.insertAdjacentHTML('beforeend', newCommentHTML);
-                     // Clear the input field
-                     if(input) input.value = '';
-
-                      // Update the comment count display
-                      const countSpan = form.closest('.tale-card')?.querySelector('.comment-count');
-                      if (countSpan) {
-                           countSpan.textContent = parseInt(countSpan.textContent || '0') + 1;
-                      }
-
-                 }
-
-             } catch (error) {
-                 console.error('Error posting comment:', error);
-                 alert('Failed to post comment.');
-             } finally {
-                 // Re-enable input
-                 if(input) input.disabled = false;
-             }
-         }
-     });
-
-    // --- Tale Form Submission (Create/Update) ---
+    // --- Form Submission (Handles both Create and Update) ---
     taleForm?.addEventListener('submit', async (event) => {
-        // ... (This function remains unchanged from the previous correct version) ...
+        event.preventDefault();
+        if (!submitTaleButton || !quill) return;
+
+        submitTaleButton.disabled = true;
+        const formData = new FormData(taleForm);
+        const taleData = Object.fromEntries(formData.entries());
+        const editId = taleData.edit_tale_id;
+        submitTaleButton.textContent = editId ? 'Saving...' : 'Posting...';
+
+        taleData.description = quill.root.innerHTML;
+        // Ensure dates are valid ISO strings or null, default created_at to now if blank
+        try { taleData.event_date = taleData.event_date ? new Date(taleData.event_date).toISOString() : null; } catch(e){ taleData.event_date = null; console.warn("Invalid event date format");}
+        try { taleData.created_at = taleData.created_at ? new Date(taleData.created_at).toISOString() : new Date().toISOString(); } catch(e){ taleData.created_at = new Date().toISOString(); console.warn("Invalid created_at date format, defaulting to now.");}
+
+
+        try {
+            const coverImageFile = formData.get('cover_image');
+            // Only upload if a file is selected
+            if (coverImageFile && coverImageFile.size > 0) {
+                const fileExt = coverImageFile.name.split('.').pop()?.toLowerCase();
+                if (!['png', 'jpg', 'jpeg', 'gif'].includes(fileExt)) throw new Error('Invalid file type. Only PNG, JPG, GIF allowed.');
+                const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+                // Use upsert:true for editing to overwrite existing image if needed
+                const { error: uploadError } = await supabaseClient.storage.from('tale-images').upload(fileName, coverImageFile, { upsert: true });
+                if (uploadError) throw uploadError;
+                const { data: urlData } = supabaseClient.storage.from('tale-images').getPublicUrl(fileName);
+                if (!urlData?.publicUrl) throw new Error("Could not get public URL for image.");
+                // Append timestamp to URL to force browser refresh
+                taleData.cover_image_url = `${urlData.publicUrl}?t=${new Date().getTime()}`;
+            } else if (editId && !coverImageFile?.size) {
+                 // In edit mode, if no new file is chosen, *don't* modify the cover_image_url field
+                 // Check if we need to explicitly set it to null or leave it out
+                 const { data: currentTale } = await supabaseClient.from('tales').select('cover_image_url').eq('id', editId).single();
+                 if (!currentTale?.cover_image_url) {
+                    taleData.cover_image_url = null; // Ensure it's null if it was null before
+                 } else {
+                    delete taleData.cover_image_url; // Don't send the field if unchanged
+                 }
+            } else if (!editId && (!coverImageFile || coverImageFile.size === 0)) {
+                 // Explicitly set to null if no image provided during creation
+                 taleData.cover_image_url = null;
+            }
+
+
+            // Clean up temporary fields before saving
+            delete taleData.cover_image; // Remove file object from data to be saved
+            delete taleData.edit_tale_id; // Remove temporary edit ID field
+            taleData.user_id = user.id; // Ensure user_id is always set
+
+            // Perform Insert or Update
+            const { error } = editId ?
+                await supabaseClient.from('tales').update(taleData).eq('id', editId).select() : // Use select() to check RLS
+                await supabaseClient.from('tales').insert([taleData]).select(); // Use select() to check RLS
+            if (error) throw error; // Throw error to be caught by catch block
+
+            addTaleModal?.classList.add('hidden');
+            await loadTales(); // Refresh feed on success
+
+        } catch (error) {
+            console.error('Error saving tale:', error);
+            alert(`Sorry, there was an error saving your tale: ${error.message || 'Unknown error'}`);
+        } finally {
+            // Reset form and modal state regardless of success/error
+            submitTaleButton.disabled = false;
+            taleForm?.reset();
+            quill?.setText('');
+            const modalTitle = addTaleModal?.querySelector('h3');
+            if (modalTitle) modalTitle.textContent = 'Create a New Tale';
+            if (submitTaleButton) submitTaleButton.textContent = 'Post Tale';
+            const editIdInput = document.getElementById('edit-tale-id');
+            if (editIdInput) editIdInput.value = '';
+        }
     });
 });
-
