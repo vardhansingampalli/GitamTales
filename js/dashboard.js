@@ -71,6 +71,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function loadUserProfile() {
         if (!user) return; // Don't run if user isn't defined
         try {
+            // temp vars to hold upload metadata so we can insert into the tale_images table after saving the tale
+            let uploadedFileName = null;
+            let uploadedPublicUrl = null;
+            let uploadedFileSize = null;
+            let uploadedMime = null;
             const { data: profile, error } = await supabaseClient.from('profiles').select('full_name, branch, bio, avatar_url').eq('id', user.id).single();
             if (error && error.code !== 'PGRST116') throw error; // Allow "No row found"
 
@@ -411,6 +416,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (!urlData?.publicUrl) throw new Error("Could not get public URL for image.");
                 // Append timestamp to URL to force browser refresh
                 taleData.cover_image_url = `${urlData.publicUrl}?t=${new Date().getTime()}`;
+                // store upload metadata for later insertion into the metadata table
+                uploadedFileName = fileName;
+                uploadedPublicUrl = urlData.publicUrl;
+                uploadedFileSize = coverImageFile.size;
+                uploadedMime = coverImageFile.type;
             } else if (editId && !coverImageFile?.size) {
                  // In edit mode, if no new file is chosen, *don't* modify the cover_image_url field
                  // Check if we need to explicitly set it to null or leave it out
@@ -431,11 +441,37 @@ document.addEventListener('DOMContentLoaded', async () => {
             delete taleData.edit_tale_id; // Remove temporary edit ID field
             taleData.user_id = user.id; // Ensure user_id is always set
 
-            // Perform Insert or Update
-            const { error } = editId ?
-                await supabaseClient.from('tales').update(taleData).eq('id', editId).select() : // Use select() to check RLS
-                await supabaseClient.from('tales').insert([taleData]).select(); // Use select() to check RLS
-            if (error) throw error; // Throw error to be caught by catch block
+            // Perform Insert or Update. Capture returned row so we can link image metadata to the tale.
+            let savedTale = null;
+            if (editId) {
+                const { data: updated, error } = await supabaseClient.from('tales').update(taleData).eq('id', editId).select().single();
+                if (error) throw error;
+                savedTale = updated;
+            } else {
+                const { data: inserted, error } = await supabaseClient.from('tales').insert([taleData]).select().single();
+                if (error) throw error;
+                savedTale = inserted;
+            }
+
+            // If we uploaded a file, insert a metadata row into the `tale_images` table
+            if (uploadedFileName && savedTale?.id) {
+                try {
+                    const meta = {
+                        user_id: user.id,
+                        tale_id: savedTale.id,
+                        file_name: uploadedFileName,
+                        file_path: uploadedFileName,
+                        public_url: uploadedPublicUrl,
+                        size_bytes: uploadedFileSize,
+                        mime_type: uploadedMime,
+                        is_public: true
+                    };
+                    const { error: metaError } = await supabaseClient.from('tale_images').insert([meta]);
+                    if (metaError) console.warn('Could not insert tale_images metadata:', metaError);
+                } catch (metaErr) {
+                    console.error('Error inserting tale_images metadata:', metaErr);
+                }
+            }
 
             addTaleModal?.classList.add('hidden');
             await loadTales(); // Refresh feed on success

@@ -20,6 +20,8 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Name of the storage bucket used for tale images. Change this if you create a different bucket.
-const STORAGE_BUCKET = 'tales-images';
+// You said you're creating a new bucket named 'taleimages' — set that here if you want the app
+// to use the new bucket. Otherwise leave as 'tales-images'.
+const STORAGE_BUCKET = 'taleimages';
 
 // Now, any other script can use the `supabaseClient` and `STORAGE_BUCKET` variables to talk to the database.
