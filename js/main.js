@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- If no session, proceed with loading homepage ---
     document.body.style.opacity = 1; // Make body visible
-    setupHomepage();
+    await setupHomepage();
     loadDiscoverTalesPreview(); // Load the preview carousel
     setupModalControls();
 
@@ -38,13 +38,68 @@ document.addEventListener('DOMContentLoaded', async () => {
  * Basic homepage setup (menu, year).
  */
 
-function setupHomepage() {
+async function setupHomepage() {
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     const mobileMenuNav = document.getElementById('mobile-menu');
     mobileMenuButton?.addEventListener('click', () => mobileMenuNav?.classList.toggle('hidden'));
 
     const yearSpan = document.getElementById('year');
     if (yearSpan) yearSpan.textContent = new Date().getFullYear();
+
+    // Ensure visible counters start at 0 so the animation runs when triggered
+    document.querySelectorAll('.counter-number').forEach(el => el.textContent = '0');
+
+    // Fetch the current number of active users from Supabase and set the counter's data-target
+    // We'll wait for both counts to resolve before creating the IntersectionObserver so the
+    // animation has the correct targets when it runs.
+    const fetchActive = (async function fetchAndSetActiveUsersCount(){
+        try {
+            const activeCounter = document.getElementById('active-users-counter');
+            if (!activeCounter) return;
+
+            // Attempt to get a count of rows in the `profiles` table.
+            // This assumes you store one profile row per user. If your schema uses a different table,
+            // change 'profiles' to the correct table name.
+            const { count, error } = await supabaseClient
+                .from('profiles')
+                .select('id', { head: true, count: 'exact' });
+
+            if (error) {
+                console.warn('Could not fetch active users count from Supabase:', error.message || error);
+                return;
+            }
+
+            const total = Number(count) || 0;
+            // Update only the data-target so the existing animation will animate from 0 -> total
+            activeCounter.setAttribute('data-target', String(total));
+            console.log('[homepage] active users count:', total);
+        } catch (err) {
+            console.error('Error fetching active users count:', err);
+        }
+    })();
+
+    // Fetch and set the total number of tales so the Total Tales counter animates correctly
+    const fetchTales = (async function fetchAndSetTotalTalesCount(){
+        try {
+            const totalTalesCounter = document.getElementById('total-tales-counter');
+            if (!totalTalesCounter) return;
+
+            const { count, error } = await supabaseClient
+                .from('tales')
+                .select('id', { head: true, count: 'exact' });
+
+            if (error) {
+                console.warn('Could not fetch total tales count from Supabase:', error.message || error);
+                return;
+            }
+
+            const total = Number(count) || 0;
+            totalTalesCounter.setAttribute('data-target', String(total));
+            console.log('[homepage] total tales count:', total);
+        } catch (err) {
+            console.error('Error fetching total tales count:', err);
+        }
+    })();
 
     // ADD THIS COUNTER ANIMATION CODE:
     function animateCounter(element) {
@@ -64,6 +119,13 @@ function setupHomepage() {
         }, 16);
     }
     
+    // Wait for counts to be fetched (or fail) so data-targets are set before animation.
+    try {
+        await Promise.all([fetchActive, fetchTales]);
+    } catch (e) {
+        console.warn('[homepage] one or more count fetches failed:', e);
+    }
+
     // Trigger counter animation when visible
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {

@@ -79,20 +79,42 @@ section[id] {
    ============================================ */
 
 /* Typing text animation */
+/* ============================================
+   HOMEPAGE HERO ANIMATIONS
+   ============================================ */
+
+/* ============================================
+   HOMEPAGE HERO ANIMATIONS
+   ============================================ */
 .typing-text {
     display: inline-block;
     overflow: hidden;
     border-right: 3px solid #007367;
     white-space: nowrap;
-    animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+    vertical-align: bottom;
+    animation: typing 3s steps(20) forwards, blink-caret 0.75s step-end infinite;
+    animation-delay: 0.5s, 3.5s; /* Cursor blinks after typing completes */
+}
+
+.typing-text::before {
+    content: '';
+    display: inline-block;
 }
 
 @keyframes typing {
-    from { width: 0; }
-    to { width: 100%; }
+    from { 
+        max-width: 0;
+    }
+    to { 
+        max-width: 13ch; /* 13 characters for "Reimagined." plus cursor */
+    }
 }
 
 @keyframes blink-caret {
-    from, to { border-color: transparent; }
-    50% { border-color: #007367; }
+    from, to { 
+        border-color: #007367; 
+    }
+    50% { 
+        border-color: transparent; 
+    }
 }

@@ -49,19 +49,22 @@
         <!-- Hero Section -->
         <section class="py-16 md:py-24 bg-white">
             <div class="container mx-auto px-6 text-center">
-                <h1 class="text-4xl md:text-6xl font-extrabold text-gray-900 mb-4 leading-tight">Your College Journey, <span class="text-[#007367] typing-text">Reimagined</span>.</h1>
+                <!-- increased bottom margin (mb-6 on small, md:mb-10 on medium+) to space paragraph below -->
+                <h1 class="text-4xl md:text-6xl font-extrabold text-gray-900 mb-6 md:mb-10 leading-tight">Your College Journey, <span class="text-[#007367] typing-text">Reimagined.</span></h1>
                 <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-8">Transform your GITAM experience into a living, interactive story that inspires peers and engages recruiters. Go beyond the resume.</p>
                 <a href="signup.html" class="bg-[#007367] hover:bg-[#005f56] text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 inline-block">Start Your Journey (It's Free)</a>
                 
 
 <!-- Add these counter cards -->
-<div class="grid grid-cols-2 gap-6 max-w-xl mx-auto mt-16">
-    <div class="bg-gray-50 rounded-lg p-6 shadow-md border border-gray-100">
-        <div class="text-4xl font-bold text-[#007367] counter-number" data-target="1247">0</div>
+    <div class="grid grid-cols-2 gap-6 max-w-xl mx-auto mt-16">
+        <div class="bg-gray-50 rounded-lg p-6 shadow-md border border-gray-100">
+        <!-- total tales counter: populated from Supabase -->
+        <div id="total-tales-counter" class="text-4xl font-bold text-[#007367] counter-number" data-target="0" aria-live="polite">0</div>
         <div class="text-sm text-gray-600 mt-2">Total Tales</div>
     </div>
     <div class="bg-gray-50 rounded-lg p-6 shadow-md border border-gray-100">
-        <div class="text-4xl font-bold text-[#007367] counter-number" data-target="856">0</div>
+        <!-- active users counter: will be populated from Supabase on load -->
+        <div id="active-users-counter" class="text-4xl font-bold text-[#007367] counter-number" data-target="0" aria-live="polite">0</div>
         <div class="text-sm text-gray-600 mt-2">Active Users</div>
     </div>
 </div>
