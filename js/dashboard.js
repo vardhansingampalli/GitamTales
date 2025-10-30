@@ -383,13 +383,31 @@ document.addEventListener('DOMContentLoaded', async () => {
             const coverImageFile = formData.get('cover_image');
             // Only upload if a file is selected
             if (coverImageFile && coverImageFile.size > 0) {
+                // --- Debug check: verify the storage bucket exists before attempting upload ---
+                try {
+                    const { data: _listData, error: _listError } = await supabaseClient.storage.from(STORAGE_BUCKET).list({ limit: 1 });
+                    if (_listError) {
+                        console.error('Storage bucket list check error:', _listError);
+                        throw new Error('Bucket not found');
+                    }
+                } catch (bucketCheckErr) {
+                    console.error('Bucket existence check failed:', bucketCheckErr);
+                    // Re-enable button and surface a clearer message to the user
+                    submitTaleButton.disabled = false;
+                    submitTaleButton.textContent = editId ? 'Save Changes' : 'Post Tale';
+                    alert(`Sorry, there was an error saving your tale: Bucket not found. Please create a storage bucket named "${STORAGE_BUCKET}" in your Supabase project or update the bucket name in the code.`);
+                    return;
+                }
                 const fileExt = coverImageFile.name.split('.').pop()?.toLowerCase();
                 if (!['png', 'jpg', 'jpeg', 'gif'].includes(fileExt)) throw new Error('Invalid file type. Only PNG, JPG, GIF allowed.');
                 const fileName = `${user.id}-${Date.now()}.${fileExt}`;
                 // Use upsert:true for editing to overwrite existing image if needed
-                const { error: uploadError } = await supabaseClient.storage.from('tale-images').upload(fileName, coverImageFile, { upsert: true });
-                if (uploadError) throw uploadError;
-                const { data: urlData } = supabaseClient.storage.from('tale-images').getPublicUrl(fileName);
+                const { error: uploadError } = await supabaseClient.storage.from(STORAGE_BUCKET).upload(fileName, coverImageFile, { upsert: true });
+                if (uploadError) {
+                    console.error('Upload error:', uploadError);
+                    throw uploadError;
+                }
+                const { data: urlData } = supabaseClient.storage.from(STORAGE_BUCKET).getPublicUrl(fileName);
                 if (!urlData?.publicUrl) throw new Error("Could not get public URL for image.");
                 // Append timestamp to URL to force browser refresh
                 taleData.cover_image_url = `${urlData.publicUrl}?t=${new Date().getTime()}`;

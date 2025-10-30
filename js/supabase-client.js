@@ -19,4 +19,7 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 // Create the Supabase client
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Now, any other script can use the `supabaseClient` variable to talk to the database.
+// Name of the storage bucket used for tale images. Change this if you create a different bucket.
+const STORAGE_BUCKET = 'tales-images';
+
+// Now, any other script can use the `supabaseClient` and `STORAGE_BUCKET` variables to talk to the database.
