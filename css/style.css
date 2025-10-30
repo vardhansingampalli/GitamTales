@@ -74,3 +74,25 @@ section[id] {
     isolation: isolate;
 }
 
+/* ============================================
+   HOMEPAGE HERO ANIMATIONS
+   ============================================ */
+
+/* Typing text animation */
+.typing-text {
+    display: inline-block;
+    overflow: hidden;
+    border-right: 3px solid #007367;
+    white-space: nowrap;
+    animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+}
+
+@keyframes typing {
+    from { width: 0; }
+    to { width: 100%; }
+}
+
+@keyframes blink-caret {
+    from, to { border-color: transparent; }
+    50% { border-color: #007367; }
+}

@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 /**
  * Basic homepage setup (menu, year).
  */
+
 function setupHomepage() {
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     const mobileMenuNav = document.getElementById('mobile-menu');
@@ -44,6 +45,37 @@ function setupHomepage() {
 
     const yearSpan = document.getElementById('year');
     if (yearSpan) yearSpan.textContent = new Date().getFullYear();
+
+    // ADD THIS COUNTER ANIMATION CODE:
+    function animateCounter(element) {
+        const target = parseInt(element.getAttribute('data-target'));
+        const duration = 2000;
+        const step = target / (duration / 16);
+        let current = 0;
+        
+        const timer = setInterval(() => {
+            current += step;
+            if (current >= target) {
+                element.textContent = target.toLocaleString();
+                clearInterval(timer);
+            } else {
+                element.textContent = Math.floor(current).toLocaleString();
+            }
+        }, 16);
+    }
+    
+    // Trigger counter animation when visible
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                document.querySelectorAll('.counter-number').forEach(animateCounter);
+                observer.disconnect();
+            }
+        });
+    });
+    
+    const heroSection = document.querySelector('section');
+    if (heroSection) observer.observe(heroSection);
 }
 
 /**
