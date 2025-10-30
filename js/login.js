@@ -43,9 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Google Login ---
     if (googleBtn) {
         googleBtn.addEventListener('click', async () => {
-            // Check if supabaseClient is available
             if (typeof supabaseClient === 'undefined') {
-                console.error('Supabase client is not initialized.');
                 formMessage.textContent = 'Error: Client configuration is missing.';
                 formMessage.className = 'text-center text-sm text-red-500';
                 return;
@@ -59,16 +57,13 @@ document.addEventListener('DOMContentLoaded', () => {
         forgotPasswordLink.addEventListener('click', (event) => {
             event.preventDefault();
             if (!forgotPasswordModal) return;
-            // Reset form to its original state every time it's opened
             forgotPasswordForm?.classList.remove('hidden');
             forgotSuccessMessage?.classList.add('hidden');
             if(forgotFormMessage) forgotFormMessage.textContent = '';
             if(forgotEmailInput) forgotEmailInput.value = '';
-            // Show the modal
             forgotPasswordModal.classList.remove('hidden');
         });
     }
-    // Close modal listeners
     closeForgotPasswordModal?.addEventListener('click', () => forgotPasswordModal.classList.add('hidden'));
     forgotPasswordModal?.addEventListener('click', (e) => {
         if (e.target === forgotPasswordModal) forgotPasswordModal.classList.add('hidden');
@@ -89,9 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(submitBtn) submitBtn.textContent = 'Sending...';
         if(forgotFormMessage) forgotFormMessage.textContent = '';
 
-        // Check if supabaseClient is available
         if (typeof supabaseClient === 'undefined') {
-            console.error('Supabase client is not initialized.');
             if(forgotFormMessage) forgotFormMessage.textContent = 'Error: Client configuration is missing.';
             if(submitBtn) submitBtn.disabled = false;
             if(submitBtn) submitBtn.textContent = 'Send Reset Link';
@@ -109,7 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (error) {
             if(forgotFormMessage) forgotFormMessage.textContent = "Error: ".concat(error.message);
         } else {
-            // Show the "Email Sent" success message
             forgotPasswordForm.classList.add('hidden');
             forgotSuccessMessage?.classList.remove('hidden');
         }
@@ -126,9 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = passwordInput.value;
         if(formMessage) formMessage.textContent = ''; 
 
-        // Check if supabaseClient is available
         if (typeof supabaseClient === 'undefined') {
-            console.error('Supabase client is not initialized.');
             if(formMessage) {
                  formMessage.textContent = 'Error: Client configuration is missing.';
                  formMessage.className = 'text-center text-sm text-red-500';
@@ -151,7 +141,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     formMessage.className = 'text-center text-sm text-red-500';
                 }
             } else if (data.user) {
-                // On success, redirect to the dashboard
                 window.location.href = 'dashboard.html';
             }
         } catch (e) {
@@ -165,5 +154,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
-
 
