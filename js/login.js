@@ -1,6 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('login-form');
-    if (!loginForm) return;
+    // Safety check in case the script is loaded on a different page
+    if (!loginForm) {
+        return;
+    }
 
     // --- Element Selections ---
     const emailInput = document.getElementById('email');
@@ -10,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const forgotPasswordLink = document.getElementById('forgot-password');
     const formMessage = document.getElementById('form-message');
 
-    // --- NEW: Forgot Password Modal Elements ---
+    // --- Forgot Password Modal Elements ---
     const forgotPasswordModal = document.getElementById('forgot-password-modal');
     const closeForgotPasswordModal = document.getElementById('close-forgot-modal');
     const forgotPasswordForm = document.getElementById('forgot-password-form');
@@ -44,21 +47,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Forgot Password Logic (UPDATED) ---
+    // --- Forgot Password Logic (FIXED) ---
     if (forgotPasswordLink) {
         forgotPasswordLink.addEventListener('click', (event) => {
             event.preventDefault();
-            forgotPasswordModal.classList.remove('hidden'); // Show the new modal
+            // Reset form to its original state every time it's opened
+            forgotPasswordForm.classList.remove('hidden');
+            forgotSuccessMessage.classList.add('hidden');
+            forgotFormMessage.textContent = '';
+            forgotEmailInput.value = '';
+            // Show the modal
+            forgotPasswordModal.classList.remove('hidden');
         });
     }
     // Close modal listeners
-    closeForgotPasswordModal.addEventListener('click', () => forgotPasswordModal.classList.add('hidden'));
-    forgotPasswordModal.addEventListener('click', (e) => {
+    closeForgotPasswordModal?.addEventListener('click', () => forgotPasswordModal.classList.add('hidden'));
+    forgotPasswordModal?.addEventListener('click', (e) => {
         if (e.target === forgotPasswordModal) forgotPasswordModal.classList.add('hidden');
     });
 
     // Handle the submission of the forgot password modal
-    forgotPasswordForm.addEventListener('submit', async (event) => {
+    forgotPasswordForm?.addEventListener('submit', async (event) => {
         event.preventDefault();
         const email = forgotEmailInput.value;
         const submitBtn = forgotPasswordForm.querySelector('button[type="submit"]');
@@ -68,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
         forgotFormMessage.textContent = '';
 
         // --- THIS IS THE CRITICAL FIX ---
-        // We must provide the full URL to our reset-password.html page
+        // It now redirects to the correct reset-password.html page
         const resetURL = window.location.origin + '/reset-password.html';
         
         const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
@@ -78,9 +87,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (error) {
             forgotFormMessage.textContent = "Error: " + error.message;
         } else {
-            // Show the "Email Sent" message
+            // Show the "Email Sent" success message
             forgotPasswordForm.classList.add('hidden');
-    
             forgotSuccessMessage.classList.remove('hidden');
         }
 
@@ -109,6 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 formMessage.textContent = `Error: ${error.message}`;
                 formMessage.className = 'text-center text-sm text-red-500';
             } else if (data.user) {
+                // On success, redirect to the dashboard
                 window.location.href = 'dashboard.html';
             }
         } catch (e) {
@@ -120,3 +129,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
