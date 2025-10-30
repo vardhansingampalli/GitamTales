@@ -103,11 +103,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const resetURL = window.location.origin + '/reset-password.html';
         
         const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-            redirectTo: resetURL,
+            redirectTo: resetURL, // This now points to the correct page
         });
 
         if (error) {
-            if(forgotFormMessage) forgotFormMessage.textContent = "Error: " + error.message;
+            if(forgotFormMessage) forgotFormMessage.textContent = "Error: ".concat(error.message);
         } else {
             // Show the "Email Sent" success message
             forgotPasswordForm.classList.add('hidden');
