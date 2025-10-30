@@ -45,8 +45,8 @@
                         <input type="password" id="password" name="password" required class="block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg focus:ring-[#007367] focus:border-[#007367] transition pr-10" placeholder="Enter your password">
                         <button type="button" data-toggle-password="password" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.432 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.432 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                         </button>
                     </div>
@@ -68,6 +68,41 @@
         </div>
         <p class="text-center text-xs text-gray-500 mt-6">&copy; 2025 GitamTales. All rights reserved.</p>
     </div>
+
+    <!-- === FORGOT PASSWORD MODAL ADDED HERE === -->
+    <div id="forgot-password-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md transform transition-all">
+            <div class="flex justify-between items-center p-4 border-b border-gray-200">
+                <h3 class="text-xl font-bold text-gray-800">Reset Password</h3>
+                <button id="close-forgot-modal" class="text-gray-400 hover:text-gray-600 p-2 rounded-full">
+                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <!-- This message shows on success -->
+            <div id="forgot-success-message" class="hidden p-6 text-center">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <h4 class="text-lg font-semibold text-gray-800 mb-2">Email Sent!</h4>
+                <p class="text-gray-600">Please check your email inbox for a password reset link.</p>
+            </div>
+
+            <form id="forgot-password-form" class="p-6 space-y-4">
+                <p class="text-sm text-gray-600">Enter your account email, and we will send you a link to reset your password.</p>
+                <div>
+                    <label for="forgot-email" class="block text-sm font-medium text-gray-700">GITAM Email</label>
+                    <input type="email" id="forgot-email" required class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-200 rounded-lg focus:ring-[#007367] focus:border-[#007367]">
+                </div>
+                <p id="forgot-form-message" class="text-center text-sm text-red-500"></p>
+                <button type="submit" class="w-full bg-[#007367] hover:bg-[#005f56] text-white font-bold py-3 px-4 rounded-lg">
+                    Send Reset Link
+                </button>
+            </form>
+        </div>
+    </div>
+    <!-- === END OF MODAL === -->
+
     <script src="js/login.js"></script>
 </body>
 </html>
