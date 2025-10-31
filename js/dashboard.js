@@ -225,9 +225,77 @@ document.addEventListener('DOMContentLoaded', async () => {
         const coverImageHTML = tale.cover_image_url ? `<img src="${tale.cover_image_url}" alt="Cover for ${tale.title}" class="w-full h-auto max-h-96 object-cover border-y border-gray-100 my-4">` : '';
         const likeButtonClass = tale.user_has_liked ? 'text-red-500 fill-current' : 'text-gray-600';
         const likeButtonHTML = `<button data-tale-id="${tale.id}" data-liked="${tale.user_has_liked}" class="like-button ${likeButtonClass} hover:text-red-500 flex items-center gap-1 transition-colors"><svg class="w-5 h-5 pointer-events-none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg> <span class="like-count text-sm">${tale.like_count || 0}</span></button>`;
-        const commentButtonHTML = `<button class="text-gray-600 hover:text-blue-500 flex items-center gap-1 transition-colors"><svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg> <span class="text-sm">0</span></button>`; // Using 0 for comments
+        const commentButtonHTML = `<button class="comment-button text-gray-600 hover:text-blue-500 flex items-center gap-1 transition-colors" data-tale-id="${tale.id}"><svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg> <span class="comment-count text-sm">0</span></button>
+        <div class="comments-section hidden mt-4 border-t border-gray-100 pt-4">
+            <div class="comments-container space-y-4"></div>
+            <form class="comment-form mt-4 flex gap-2">
+                <input type="text" class="comment-input flex-grow px-4 py-2 border border-gray-200 rounded-lg focus:ring-[#007367] focus:border-[#007367]" placeholder="Write a comment...">
+                <button type="submit" class="bg-[#007367] text-white px-4 py-2 rounded-lg hover:bg-[#005f56] transition-colors">Post</button>
+            </form>
+        </div>`;
 
         return `<div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6 overflow-hidden tale-card" id="tale-${tale.id}"><div class="p-6"><div class="flex justify-between items-start mb-4"><div class="flex items-center flex-grow min-w-0 mr-4"><img src="${authorAvatar}" alt="${authorName}'s Avatar" class="w-10 h-10 rounded-full mr-3 flex-shrink-0"> <div class="min-w-0"><h4 class="font-bold text-gray-900 truncate">${authorName}</h4><p class="text-sm text-gray-500 truncate">Posted in <a href="#" class="font-semibold text-[#007367] hover:underline">${tale.category}</a> &middot; ${postDate}</p></div></div><div class="flex-shrink-0">${ownerControls}</div></div><h3 class="text-xl font-semibold mb-2 text-gray-800">${tale.title}</h3><div class="prose prose-sm max-w-none text-gray-700 break-words">${tale.description || ''}</div></div>${coverImageHTML}<div class="p-4 flex justify-between items-center border-t border-gray-100"><div class="flex gap-4">${likeButtonHTML}${commentButtonHTML}</div></div></div>`;
+    // --- Comment Functionality ---
+    // Load comments for a tale
+    async function loadComments(taleId, commentsContainer, commentCountSpan) {
+        try {
+            const { data: comments, error } = await supabaseClient
+                .from('comments')
+                .select('*, profiles:user_id (full_name, avatar_url)')
+                .eq('tale_id', taleId)
+                .order('created_at', { ascending: true });
+            if (error) throw error;
+            commentsContainer.innerHTML = comments.map(comment => {
+                const authorName = comment.profiles?.full_name || 'A Gitamite';
+                const authorAvatar = comment.profiles?.avatar_url ? `${comment.profiles.avatar_url}?t=${new Date().getTime()}` : `https://placehold.co/32x32/e0e7ff/3730a3?text=${authorName.charAt(0).toUpperCase()}`;
+                const postDate = typeof dateFns !== 'undefined' ? dateFns.formatDistanceToNow(new Date(comment.created_at), { addSuffix: true }) : new Date(comment.created_at).toLocaleDateString();
+                return `<div class="comment flex gap-3 items-start"><img src="${authorAvatar}" alt="${authorName}'s Avatar" class="w-8 h-8 rounded-full flex-shrink-0"><div class="flex-grow"><div class="bg-gray-50 rounded-lg px-4 py-2"><p class="font-semibold text-sm">${authorName}</p><p class="text-gray-700">${comment.content}</p></div><p class="text-xs text-gray-500 mt-1">${postDate}</p></div></div>`;
+            }).join('');
+            if (commentCountSpan) commentCountSpan.textContent = comments.length;
+        } catch (error) {
+            commentsContainer.innerHTML = '<p class="text-red-500">Error loading comments.</p>';
+        }
+    }
+
+    // Event delegation for comment button and form
+    timelineFeed?.addEventListener('click', async (event) => {
+        const commentBtn = event.target.closest('.comment-button');
+        if (commentBtn) {
+            const taleId = commentBtn.dataset.taleId;
+            const taleCard = document.getElementById(`tale-${taleId}`);
+            const commentsSection = taleCard.querySelector('.comments-section');
+            const commentsContainer = commentsSection.querySelector('.comments-container');
+            const commentCountSpan = commentBtn.querySelector('.comment-count');
+            commentsSection.classList.toggle('hidden');
+            if (!commentsSection.classList.contains('hidden')) {
+                await loadComments(taleId, commentsContainer, commentCountSpan);
+            }
+        }
+    });
+
+    timelineFeed?.addEventListener('submit', async (event) => {
+        const form = event.target.closest('.comment-form');
+        if (form) {
+            event.preventDefault();
+            const taleCard = form.closest('.tale-card');
+            const taleId = taleCard.id.replace('tale-', '');
+            const input = form.querySelector('.comment-input');
+            const content = input.value.trim();
+            if (!content) return;
+            try {
+                const { error } = await supabaseClient
+                    .from('comments')
+                    .insert({ tale_id: taleId, user_id: user.id, content });
+                if (error) throw error;
+                input.value = '';
+                const commentsContainer = taleCard.querySelector('.comments-container');
+                const commentCountSpan = taleCard.querySelector('.comment-count');
+                await loadComments(taleId, commentsContainer, commentCountSpan);
+            } catch (error) {
+                alert('Failed to post comment.');
+            }
+        }
+    });
     }
 
     // --- Initial Load ---

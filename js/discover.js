@@ -46,48 +46,47 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
         if (user) { // User is logged in
-            // Check if profile menu already exists to prevent duplicate creation
-            if (document.getElementById('profile-menu-container')) return;
-
-            const profileMenuContainerHTML = `
-                <div id="profile-menu-container" class="relative">
-                     <button id="profile-menu-button" class="flex items-center space-x-2">
-                         <img src="https://placehold.co/40x40/e0e7ff/3730a3?text=?" alt="User Avatar" class="w-8 h-8 rounded-full border border-gray-200">
-                         <span class="hidden sm:inline font-semibold text-gray-700 text-sm">Loading...</span>
-                     </button>
-                     <div id="profile-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 border border-gray-100">
-                         <a href="dashboard.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Journey</a>
-                         <a href="settings.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
-                         <hr class="my-1 border-gray-100">
-                         <a href="#" id="logout-button" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Log Out</a>
-                     </div>
-                </div>`;
-
-            authStatusDiv.innerHTML = profileMenuContainerHTML; // Replace login/signup
-
-            // Now get the newly added elements
-            const profileMenuButton = document.getElementById('profile-menu-button');
-            const logoutButton = document.getElementById('logout-button');
-            const profileMenu = document.getElementById('profile-menu'); // Define profileMenu here
-
-            const displayName = userProfile?.full_name || user.email?.split('@')[0] || 'User';
-            const avatarUrl = userProfile?.avatar_url ? `${userProfile.avatar_url}?t=${new Date().getTime()}` : `https://placehold.co/40x40/e0e7ff/3730a3?text=${displayName.charAt(0).toUpperCase()}`;
-
-            if (profileMenuButton) {
-                 const img = profileMenuButton.querySelector('img');
-                 const span = profileMenuButton.querySelector('span');
-                 if(img) img.src = avatarUrl;
-                 if(span) span.textContent = displayName;
-            }
-
+            // Remove all children (login/signup buttons)
+            authStatusDiv.innerHTML = '';
+            // Insert profile menu only
+            const profileMenuContainer = document.createElement('div');
+            profileMenuContainer.id = 'profile-menu-container';
+            profileMenuContainer.className = 'relative';
+            profileMenuContainer.innerHTML = `
+                <button id="profile-menu-button" class="flex items-center space-x-2">
+                    <img src="${userProfile?.avatar_url ? userProfile.avatar_url + '?t=' + new Date().getTime() : `https://placehold.co/40x40/e0e7ff/3730a3?text=${(userProfile?.full_name || user.email?.charAt(0) || 'U').toUpperCase()}`}" alt="User Avatar" class="w-8 h-8 rounded-full border border-gray-200">
+                    <span class="hidden sm:inline font-semibold text-gray-700 text-sm">${userProfile?.full_name || user.email?.split('@')[0] || 'User'}</span>
+                </button>
+                <div id="profile-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 border border-gray-100">
+                    <a href="dashboard.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Journey</a>
+                    <a href="settings.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
+                    <hr class="my-1 border-gray-100">
+                    <a href="#" id="logout-button" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Log Out</a>
+                </div>
+            `;
+            authStatusDiv.appendChild(profileMenuContainer);
 
             // Add event listeners
-            profileMenuButton?.addEventListener('click', () => { profileMenu?.classList.toggle('hidden'); });
-            logoutButton?.addEventListener('click', async (e) => { e.preventDefault(); await supabaseClient.auth.signOut(); window.location.reload(); });
-            document.addEventListener('click', (event) => { if (profileMenu && !profileMenu.classList.contains('hidden') && profileMenuButton && !profileMenuButton.contains(event.target) && !profileMenu.contains(event.target)) { profileMenu.classList.add('hidden'); } });
-
+            const profileMenuButton = document.getElementById('profile-menu-button');
+            const logoutButton = document.getElementById('logout-button');
+            const profileMenu = document.getElementById('profile-menu');
+            profileMenuButton?.addEventListener('click', () => profileMenu?.classList.toggle('hidden'));
+            document.addEventListener('click', (event) => {
+                if (profileMenu && !profileMenu.classList.contains('hidden') && profileMenuButton && !profileMenuButton.contains(event.target) && !profileMenu.contains(event.target)) {
+                    profileMenu.classList.add('hidden');
+                }
+            });
+            logoutButton?.addEventListener('click', async (e) => { 
+                e.preventDefault(); 
+                await supabaseClient.auth.signOut(); 
+                window.location.href = 'index.html'; 
+            });
         } else {
-             // User is logged out, ensure default Login/Signup are shown (already in HTML)
+            // Show login/signup buttons for logged out users
+            authStatusDiv.innerHTML = `
+                <a href="login.html" class="text-gray-600 hover:text-[#007367] text-sm font-medium">Log In</a>
+                <a href="signup.html" class="bg-[#007367] hover:bg-[#005f56] text-white font-semibold py-2 px-4 rounded-lg text-sm">Sign Up</a>
+            `;
         }
     }
 
@@ -267,4 +266,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- Initial Load ---
     fetchPublicTales();
 
-}); // End DOMContentLoaded
+}); // Eand DOMContentLoaded
