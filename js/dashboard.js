@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return `<div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6 overflow-hidden tale-card" id="tale-${tale.id}"><div class="p-6"><div class="flex justify-between items-start mb-4"><div class="flex items-center flex-grow min-w-0 mr-4"><img src="${authorAvatar}" alt="${authorName}'s Avatar" class="w-10 h-10 rounded-full mr-3 flex-shrink-0"> <div class="min-w-0"><h4 class="font-bold text-gray-900 truncate">${authorName}</h4><p class="text-sm text-gray-500 truncate">Posted in <a href="#" class="font-semibold text-[#007367] hover:underline">${tale.category}</a> &middot; ${postDate}</p></div></div><div class="flex-shrink-0">${ownerControls}</div></div><h3 class="text-xl font-semibold mb-2 text-gray-800">${tale.title}</h3><div class="prose prose-sm max-w-none text-gray-700 break-words">${tale.description || ''}</div></div>${coverImageHTML}<div class="p-4 flex justify-between items-center border-t border-gray-100"><div class="flex gap-4">${likeButtonHTML}${commentButtonHTML}</div></div></div>`;
     // --- Comment Functionality ---
     // Load comments for a tale
-   /* async function loadComments(taleId, commentsContainer, commentCountSpan) {
+    async function loadComments(taleId, commentsContainer, commentCountSpan) {
         try {
             const { data: comments, error } = await supabaseClient
                 .from('comments')
@@ -295,7 +295,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 alert('Failed to post comment.');
             }
         }
-    });*/
+    });
     }
 
     // --- Initial Load ---
