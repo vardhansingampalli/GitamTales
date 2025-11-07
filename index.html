@@ -46,24 +46,24 @@
     </header>
 
     <main>
-        <!-- Hero Section -->
+        
         <section class="py-16 md:py-24 bg-white">
             <div class="container mx-auto px-6 text-center">
-                <!-- increased bottom margin (mb-6 on small, md:mb-10 on medium+) to space paragraph below -->
+                
                 <h1 class="text-4xl md:text-6xl font-extrabold text-gray-900 mb-6 md:mb-10 leading-tight">Your College Journey, <span class="text-[#007367] typing-text">Reimagined.</span></h1>
                 <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-8">Transform your GITAM experience into a living, interactive story that inspires peers and engages recruiters. Go beyond the resume.</p>
                 <a href="signup.html" class="bg-[#007367] hover:bg-[#005f56] text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 inline-block">Start Your Journey</a>
                 
 
-<!-- Add these counter cards -->
+
     <div class="grid grid-cols-2 gap-6 max-w-xl mx-auto mt-16">
         <div class="bg-gray-50 rounded-lg p-6 shadow-md border border-gray-100">
-        <!-- total tales counter: populated from Supabase -->
+       
         <div id="total-tales-counter" class="text-4xl font-bold text-[#007367] counter-number" data-target="0" aria-live="polite">0</div>
         <div class="text-sm text-gray-600 mt-2">Total Tales</div>
     </div>
     <div class="bg-gray-50 rounded-lg p-6 shadow-md border border-gray-100">
-        <!-- active users counter: will be populated from Supabase on load -->
+       
         <div id="active-users-counter" class="text-4xl font-bold text-[#007367] counter-number" data-target="0" aria-live="polite">0</div>
         <div class="text-sm text-gray-600 mt-2">Active Users</div>
     </div>
@@ -71,7 +71,7 @@
             </div>
         </section>
 
-        <!-- How It Works Section -->
+        
         <section id="features" class="py-16 md:py-20 bg-gray-50 scroll-target">
              <div class="container mx-auto px-6">
                  <div class="text-center mb-12">
@@ -98,7 +98,7 @@
             </div>
         </section>
 
-        <!-- Discover Journeys Carousel Section -->
+        
         <section id="discover" class="py-16 md:py-20 bg-white border-t border-gray-200 scroll-target">
             <div class="container mx-auto px-6">
                 <div class="text-center mb-12">
@@ -106,18 +106,18 @@
                     <p class="text-gray-600 mt-2">Explore the latest projects, achievements, and stories.</p>
                 </div>
 
-                <!-- Carousel Container -->
+               
                 <div class="relative">
-                    <!-- Grid for Tales (Max 4 visible on large screens) -->
+                    
                     <div id="discover-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        <!-- Skeletons (Repeat 4 times) -->
+                       
                         <div class="bg-white rounded-lg overflow-hidden border border-gray-200 animate-pulse"> <div class="w-full h-48 bg-gray-300"></div> <div class="p-6"> <div class="h-4 w-1/4 rounded-md bg-gray-300 mb-2"></div> <div class="h-6 w-3/4 rounded-md bg-gray-300 mb-4"></div> <div class="flex items-center"> <div class="w-10 h-10 rounded-full bg-gray-300 mr-3"></div> <div> <div class="h-4 w-24 rounded-md bg-gray-300"></div> <div class="h-3 w-16 rounded-md bg-gray-300 mt-1"></div> </div> </div> </div> </div>
                         <div class="bg-white rounded-lg overflow-hidden border border-gray-200 animate-pulse hidden md:block"> <div class="w-full h-48 bg-gray-300"></div> <div class="p-6"> <div class="h-4 w-1/4 rounded-md bg-gray-300 mb-2"></div> <div class="h-6 w-3/4 rounded-md bg-gray-300 mb-4"></div> <div class="flex items-center"> <div class="w-10 h-10 rounded-full bg-gray-300 mr-3"></div> <div> <div class="h-4 w-24 rounded-md bg-gray-300"></div> <div class="h-3 w-16 rounded-md bg-gray-300 mt-1"></div> </div> </div> </div> </div>
                         <div class="bg-white rounded-lg overflow-hidden border border-gray-200 animate-pulse hidden lg:block"> <div class="w-full h-48 bg-gray-300"></div> <div class="p-6"> <div class="h-4 w-1/4 rounded-md bg-gray-300 mb-2"></div> <div class="h-6 w-3/4 rounded-md bg-gray-300 mb-4"></div> <div class="flex items-center"> <div class="w-10 h-10 rounded-full bg-gray-300 mr-3"></div> <div> <div class="h-4 w-24 rounded-md bg-gray-300"></div> <div class="h-3 w-16 rounded-md bg-gray-300 mt-1"></div> </div> </div> </div> </div>
                         <div class="bg-white rounded-lg overflow-hidden border border-gray-200 animate-pulse hidden lg:block"> <div class="w-full h-48 bg-gray-300"></div> <div class="p-6"> <div class="h-4 w-1/4 rounded-md bg-gray-300 mb-2"></div> <div class="h-6 w-3/4 rounded-md bg-gray-300 mb-4"></div> <div class="flex items-center"> <div class="w-10 h-10 rounded-full bg-gray-300 mr-3"></div> <div> <div class="h-4 w-24 rounded-md bg-gray-300"></div> <div class="h-3 w-16 rounded-md bg-gray-300 mt-1"></div> </div> </div> </div> </div>
                     </div>
 
-                    <!-- Navigation Buttons -->
+                   
                     <button id="prev-tale" class="absolute top-1/2 left-0 transform -translate-y-1/2 -ml-3 md:-ml-4 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-md hover:bg-gray-100 hidden disabled:opacity-50 disabled:cursor-not-allowed z-10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#007367]">
                          <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                          <span class="sr-only">Previous Tales</span>
@@ -147,12 +147,12 @@
                 <p class="text-sm text-gray-500 ml-4">&copy; <span id="year">2025</span> GitamTales. All rights reserved.</p>
             </div>
             <div class="flex space-x-4">
-                 <!-- Social Icons -->
+                 
             </div>
         </div>
     </footer>
 
-    <!-- Tale Detail Modal -->
+    
     <div id="tale-detail-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 overflow-y-auto">
         <div id="modal-content" class="bg-white rounded-xl shadow-2xl w-full max-w-2xl transform transition-all relative max-h-[90vh] flex flex-col">
             <div class="flex-shrink-0 p-4 border-b border-gray-200 flex justify-between items-center">
@@ -162,7 +162,7 @@
                  </button>
             </div>
             <div id="modal-body-content" class="p-6 md:p-8 overflow-y-auto">
-                 <!-- Skeleton for modal while loading -->
+                
                  <div class="animate-pulse space-y-4">
                     <div class="h-4 w-1/4 bg-gray-300 rounded"></div>
                     <div class="h-8 w-3/4 bg-gray-300 rounded"></div>
@@ -174,8 +174,8 @@
         </div>
     </div>
 
-    <!-- Main JS for homepage -->
-    <script src="js/main.js"></script> <!-- Ensure this path is correct -->
+   
+    <script src="js/main.js"></script> 
 </body>
 </html>
 
